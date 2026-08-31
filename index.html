@@ -99,9 +99,9 @@
   }
   .start-btn:active{ transform: translateY(4px); box-shadow: 0 2px 0 #2a5580; }
 
-  /* ---------- 地震発生画面 ---------- */
+  /* ---------- 地震発生画面（Three.js 3D教室） ---------- */
   #screen-quake{
-    background: #eef3f6;
+    background: #0b0d10;
     flex-direction: column;
     padding: clamp(10px, 2vh, 20px) 0 clamp(8px, 1.4vh, 14px);
   }
@@ -110,97 +110,13 @@
     flex: 1;
     min-height: 0;
     position:relative;
-    will-change: transform;
-  }
-  .room{
-    position:absolute; inset: 0;
-    display:flex; align-items:flex-end; justify-content:center;
-  }
-  .room-floor{
-    position:absolute; left:0; right:0; bottom:0; height: 11vh;
-    background: #cbb18a;
-    border-top: 4px solid #a9814f;
-  }
-  .room-inner{
-    position:relative;
-    width:min(920px, 92vw);
-    height: 100%;
-    background: var(--paper);
-    border: 3px solid var(--line);
-    border-radius: 12px;
     overflow:hidden;
+    border-radius: 12px;
   }
-  .window{
-    position:absolute; top: 6%; width: 16%; height: 30%;
-    background: #cfe6f2;
-    border: 6px solid #9fb6c2;
-    border-radius: 4px;
-  }
-  .window::before, .window::after{
-    content:""; position:absolute; background:#9fb6c2;
-  }
-  .window::before{ top:0; bottom:0; left:50%; width:6px; margin-left:-3px; }
-  .window::after{ left:0; right:0; top:50%; height:6px; margin-top:-3px; }
-  .w1{ left: 6%; }
-  .w2{ left: 26%; }
-  .w3{ right: 6%; }
-  .w4{ right: 26%; }
-
-  .shelf{
-    position:absolute; bottom: 0; width: 15%; height: 46%;
-    background: var(--wood);
-    border: 3px solid var(--wood-dark);
-    border-bottom: none;
-    border-radius: 4px 4px 0 0;
-    transform-origin: bottom center;
-  }
-  .shelf-left{ left: 4%; }
-  .shelf-right{ right: 4%; }
-  .shelf .shelf-line{
-    position:absolute; left:6%; right:6%; height:4px; background: var(--wood-dark);
-  }
-  .shelf .sl1{ top: 30%; }
-  .shelf .sl2{ top: 62%; }
-  .item{
-    position:absolute;
-    border-radius: 3px;
-    transform-origin: bottom center;
-  }
-
-  .desks-wrap{
-    position:absolute;
-    left: 50%; bottom: 4%;
-    transform: translateX(-50%);
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(10px, 2vw, 26px);
-    width: 62%;
-  }
-  .desk{
-    position:relative;
-    width: 100%;
-    padding-top: 62%;
-  }
-  .desk-top{
-    position:absolute; top:0; left:0; right:0; height: 34%;
-    background: #e7c691;
-    border: 3px solid #c9a06a;
-    border-radius: 4px;
-  }
-  .desk-leg{
-    position:absolute; bottom:0; width: 8%; height: 60%;
-    background: #b8b8b8;
-    border: 2px solid #9a9a9a;
-  }
-  .desk-leg.l{ left: 10%; }
-  .desk-leg.r{ right: 10%; }
-  .desk-chair{
-    position:absolute; bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 26%; height: 30%;
-    background: #cddbe6;
-    border: 2px solid #a9bccb;
-    border-radius: 4px 4px 0 0;
+  #quake3d-canvas{
+    display:block;
+    width:100%; height:100%;
+    touch-action: none;
   }
 
   .quake-banner-row{
@@ -586,6 +502,9 @@
     .idle-sub{ margin-bottom: 18px; }
   }
 </style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }
+</script>
 </head>
 <body>
 
@@ -604,34 +523,7 @@
   <!-- 地震発生画面 -->
   <section id="screen-quake" class="screen">
     <div id="shake-root">
-      <div class="room">
-        <div class="room-inner">
-          <div class="window w1"></div>
-          <div class="window w2"></div>
-          <div class="window w3"></div>
-          <div class="window w4"></div>
-
-          <div class="shelf shelf-left" id="shelf-left">
-            <div class="shelf-line sl1"></div>
-            <div class="shelf-line sl2"></div>
-            <div class="item" id="item-a" style="left:10%; top:6%; width:30%; height:16%; background:#d97757;"></div>
-            <div class="item" id="item-b" style="right:10%; top:38%; width:26%; height:14%; background:#5b8fb0;"></div>
-          </div>
-          <div class="shelf shelf-right" id="shelf-right">
-            <div class="shelf-line sl1"></div>
-            <div class="shelf-line sl2"></div>
-            <div class="item" id="item-c" style="left:12%; top:8%; width:28%; height:16%; background:#5b8fb0;"></div>
-            <div class="item" id="item-d" style="right:12%; top:40%; width:24%; height:12%; background:#d97757;"></div>
-          </div>
-
-          <div class="desks-wrap">
-            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
-            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
-            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
-          </div>
-        </div>
-        <div class="room-floor"></div>
-      </div>
+      <canvas id="quake3d-canvas"></canvas>
     </div>
     <div class="quake-banner-row" id="quake-banner-row">
       <div class="quake-banner" id="quake-banner">
@@ -809,70 +701,17 @@
     beep(300, now, 0.22, 0.1);
   }
 
-  /* ---------------- 揺れアニメーション（requestAnimationFrame + デルタタイム） ---------------- */
+  /* ---------------- 揺れアニメーション（3D教室はQuake3D側でrAF駆動） ---------------- */
   const shakeRoot = document.getElementById('shake-root');
   const banner = document.getElementById('quake-banner');
   const bannerText = document.getElementById('banner-text');
   const btnToHide = document.getElementById('btn-to-hide');
-  const shelfLeft = document.getElementById('shelf-left');
-  const shelfRight = document.getElementById('shelf-right');
-  const items = ['item-a','item-b','item-c','item-d'].map(id => document.getElementById(id));
 
-  let quakeAnim = { running:false, raf:null, lastTs:0, elapsed:0, phase:'idle' };
+  let quakeAnim = { running:false, elapsed:0 };
 
-  function intensityToPx(level){
-    // level 1〜5 → 最大振幅(px)
-    return 6 + level * 5; // 11〜31px
-  }
-
-  function stepQuake(ts){
-    if (!quakeAnim.running) return;
-    if (!quakeAnim.lastTs) quakeAnim.lastTs = ts;
-    const dt = ts - quakeAnim.lastTs;
-    quakeAnim.lastTs = ts;
-    quakeAnim.elapsed += dt;
-
-    const totalMs = state.durationSec * 1000;
-    const progress = Math.min(quakeAnim.elapsed / totalMs, 1);
-
-    let envelope;
-    if (progress < 0.15) {
-      envelope = progress / 0.15;
-    } else if (progress < 0.7) {
-      envelope = 1;
-    } else {
-      envelope = Math.max(0, 1 - (progress - 0.7) / 0.3);
-    }
-
-    const maxPx = intensityToPx(state.intensity);
-    const amp = maxPx * envelope;
-    const t = quakeAnim.elapsed / 1000;
-    const dx = Math.sin(t * 18) * amp + Math.sin(t * 7.3) * amp * 0.3;
-    const dy = Math.cos(t * 21) * amp * 0.4;
-    const rot = Math.sin(t * 13) * envelope * 0.6;
-    shakeRoot.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
-
-    const shelfRot = Math.sin(t * 15) * envelope * 2.2;
-    shelfLeft.style.transform = `rotate(${shelfRot.toFixed(2)}deg)`;
-    shelfRight.style.transform = `rotate(${(-shelfRot).toFixed(2)}deg)`;
-
-    items.forEach((el, i) => {
-      const phase = i * 1.3;
-      const ix = Math.sin(t * 16 + phase) * amp * 0.5;
-      const iy = Math.abs(Math.sin(t * 16 + phase)) * amp * 0.25 * envelope;
-      el.style.transform = `translate(${ix.toFixed(1)}px, ${iy.toFixed(1)}px)`;
-    });
-
-    if (progress >= 1) {
-      quakeAnim.running = false;
-      shakeRoot.style.transform = 'translate(0,0) rotate(0deg)';
-      shelfLeft.style.transform = 'rotate(0deg)';
-      shelfRight.style.transform = 'rotate(0deg)';
-      items.forEach(el => el.style.transform = 'translate(0,0)');
-      onQuakeSettled();
-      return;
-    }
-    quakeAnim.raf = requestAnimationFrame(stepQuake);
+  function intensityToLevel(level){
+    // level 1〜5 → そのままQuake3Dの強さレベルとして使う
+    return level;
   }
 
   function startQuakeSequence(){
@@ -880,6 +719,7 @@
     banner.classList.remove('show');
     btnToHide.classList.remove('show');
     bannerText.innerHTML = 'きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby>';
+    if (window.Quake3D) window.Quake3D.reset();
 
     // フェーズ0: 教室をそのまま設定秒数だけ見せる（まだ何も起きない）
     setTimeout(() => {
@@ -890,10 +730,11 @@
       setTimeout(() => {
         // フェーズ2: 本震開始
         bannerText.innerHTML = '<ruby>地震<rt>じしん</rt></ruby> はっせい　ゆれています。<ruby>机<rt>つくえ</rt></ruby>の<ruby>下<rt>した</rt></ruby>にかくれて<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう';
-        quakeAnim.running = true;
-        quakeAnim.lastTs = 0;
-        quakeAnim.elapsed = 0;
-        quakeAnim.raf = requestAnimationFrame(stepQuake);
+        if (window.Quake3D) {
+          window.Quake3D.startShake(state.durationSec, intensityToLevel(state.intensity), onQuakeSettled);
+        } else {
+          onQuakeSettled();
+        }
       }, 1700);
     }, state.waitSec * 1000);
   }
@@ -901,6 +742,7 @@
   function onQuakeSettled(){
     bannerText.innerHTML = 'ゆれは おさまりました';
     btnToHide.classList.add('show');
+    if (window.Quake3D) window.Quake3D.crouch(true);
   }
 
   /* ---------------- クイズ ---------------- */
@@ -914,6 +756,7 @@
   function startQuiz(){
     state.quizIndex = 0;
     state.results = [];
+    if (window.Quake3D) window.Quake3D.crouch(false);
     showScreen('quiz');
     showQuestion();
   }
@@ -1258,6 +1101,437 @@
     renderQuestionEditors();
   });
 
+})();
+</script>
+
+<script type="module">
+/* =========================================================================
+   Quake3D - 3D教室（一人称視点・地震ゆれ・棚アイテム落下）
+   参考: いただいたThree.js教室ステージファイルのマテリアル/黒板テクスチャ手法を踏襲
+   単一HTML完結 / iPad(Safari)対応 / 廊下・階段・移動操作なし（据え置き視点）
+   ========================================================================= */
+import * as THREE from 'three';
+
+(function(){
+  "use strict";
+
+  const F = '"BIZ UDPGothic", sans-serif';
+  function cvs(w, h){ const c = document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function tex(canvas){
+    const t = new THREE.CanvasTexture(canvas);
+    t.anisotropy = 8;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.generateMipmaps = true;
+    return t;
+  }
+  function prand(seed){ const v = Math.sin(seed*12.9898)*43758.5453; return v - Math.floor(v); }
+
+  /* ---------- 黒板テクスチャ（参考ファイルの手法を簡略化） ---------- */
+  function texBlackboard(){
+    const W = 1536, H = 300;
+    const c = cvs(W, H), x = c.getContext('2d');
+    x.fillStyle = '#0e5c37'; x.fillRect(0,0,W,H);
+    x.globalAlpha = .07; x.fillStyle = '#fff';
+    for(let i=0;i<20;i++){ x.fillRect(prand(i+1)*W, prand(i+50)*H, 50+prand(i+90)*110, 5+prand(i+130)*12); }
+    x.globalAlpha = 1;
+    x.strokeStyle = 'rgba(240,244,238,.9)'; x.fillStyle = 'rgba(240,244,238,.92)';
+    x.font = `700 30px ${F}`; x.fillText('じしんの れんしゅう', 36, 60);
+    x.font = `400 22px ${F}`;
+    x.fillText('・つくえの下にかくれる', 40, 130);
+    x.fillText('・あたまを まもる', 40, 168);
+    // 星の落書き
+    const cx=W-230, cy=H*0.42, R=60, r=25;
+    x.strokeStyle='rgba(250,230,150,.9)'; x.lineWidth=5; x.beginPath();
+    for(let i=0;i<10;i++){ const rad=i%2===0?R:r, a=-Math.PI/2+i*Math.PI/5;
+      const px=cx+Math.cos(a)*rad, py=cy+Math.sin(a)*rad;
+      i===0?x.moveTo(px,py):x.lineTo(px,py); }
+    x.closePath(); x.stroke();
+    return tex(c);
+  }
+  function texWindow(){
+    const c = cvs(256, 256), x = c.getContext('2d');
+    const g = x.createLinearGradient(0,0,0,256);
+    g.addColorStop(0,'#bfe4f5'); g.addColorStop(.6,'#dff1f8'); g.addColorStop(1,'#eaf6e6');
+    x.fillStyle = g; x.fillRect(0,0,256,256);
+    x.fillStyle = 'rgba(255,255,255,.35)';
+    x.beginPath(); x.moveTo(30,230); x.lineTo(130,50); x.lineTo(160,50); x.lineTo(60,230); x.closePath(); x.fill();
+    return tex(c);
+  }
+  function texDoor(){
+    const c = cvs(256, 384), x = c.getContext('2d');
+    x.fillStyle = '#b98a54'; x.fillRect(0,0,256,384);
+    x.strokeStyle = '#8a6339'; x.lineWidth = 10; x.strokeRect(6,6,244,372);
+    // ガラス窓部分（上半分）
+    x.fillStyle = '#dbe9ee'; x.fillRect(40,36,176,150);
+    x.strokeStyle = '#8a6339'; x.lineWidth = 6; x.strokeRect(40,36,176,150);
+    // 取っ手
+    x.fillStyle = '#6b7278'; x.beginPath(); x.arc(216,240,10,0,Math.PI*2); x.fill();
+    return tex(c);
+  }
+  function texClock(){
+    const c = cvs(256, 256), x = c.getContext('2d');
+    x.clearRect(0,0,256,256);
+    x.fillStyle = '#fbfbf7'; x.beginPath(); x.arc(128,128,120,0,Math.PI*2); x.fill();
+    x.strokeStyle = '#33404a'; x.lineWidth = 8; x.beginPath(); x.arc(128,128,120,0,Math.PI*2); x.stroke();
+    for(let i=0;i<12;i++){
+      const a = i/12*Math.PI*2, big = i%3===0;
+      x.lineWidth = big?6:3;
+      const r1 = big?96:104, r2 = 112;
+      x.beginPath();
+      x.moveTo(128+Math.sin(a)*r1, 128-Math.cos(a)*r1);
+      x.lineTo(128+Math.sin(a)*r2, 128-Math.cos(a)*r2);
+      x.stroke();
+    }
+    const hand = (ang,len,w,col)=>{ x.strokeStyle=col; x.lineWidth=w; x.beginPath(); x.moveTo(128,128);
+      x.lineTo(128+Math.sin(ang)*len, 128-Math.cos(ang)*len); x.stroke(); };
+    hand((10+10/60)/12*Math.PI*2, 60, 9, '#33404a');
+    hand(10/60*Math.PI*2, 92, 6, '#33404a');
+    x.fillStyle = '#33404a'; x.beginPath(); x.arc(128,128,8,0,Math.PI*2); x.fill();
+    return tex(c);
+  }
+
+  /* ---------- マテリアル ---------- */
+  let MAT = {};
+  function buildMaterials(){
+    MAT.wall     = new THREE.MeshStandardMaterial({ color:0xe9e2d2, roughness:.95 });
+    MAT.floor    = new THREE.MeshStandardMaterial({ color:0xd6a866, roughness:.85 });
+    MAT.ceil     = new THREE.MeshStandardMaterial({ color:0xf2efe8, roughness:1 });
+    MAT.deskTop  = new THREE.MeshStandardMaterial({ color:0xd9b483, roughness:.7 });
+    MAT.metal    = new THREE.MeshStandardMaterial({ color:0x9aa0a6, roughness:.5, metalness:.3 });
+    MAT.chair    = new THREE.MeshStandardMaterial({ color:0xc98f52, roughness:.7 });
+    MAT.frame    = new THREE.MeshStandardMaterial({ color:0x8a5a34, roughness:.6 });
+    MAT.shelf    = new THREE.MeshStandardMaterial({ color:0xe0d0ac, roughness:.8 });
+    MAT.shelfIn  = new THREE.MeshStandardMaterial({ color:0xe6d9bd, roughness:.85 });
+    MAT.itemA    = new THREE.MeshStandardMaterial({ color:0xd97757, roughness:.6 });
+    MAT.itemB    = new THREE.MeshStandardMaterial({ color:0x5b8fb0, roughness:.6 });
+    MAT.itemC    = new THREE.MeshStandardMaterial({ color:0xe0b84a, roughness:.6 });
+    MAT.itemD    = new THREE.MeshStandardMaterial({ color:0x7fa876, roughness:.6 });
+    MAT.blackboard = new THREE.MeshStandardMaterial({ map:texBlackboard(), roughness:.9 });
+    MAT.window   = new THREE.MeshStandardMaterial({ map:texWindow(), roughness:.4, transparent:true, opacity:.92, side:THREE.DoubleSide });
+    MAT.door     = new THREE.MeshStandardMaterial({ map:texDoor(), roughness:.7, side:THREE.DoubleSide });
+    MAT.clock    = new THREE.MeshStandardMaterial({ map:texClock(), roughness:.6, transparent:true, side:THREE.DoubleSide });
+  }
+
+  function addBox(scene, cx, cy, cz, sx, sy, sz, mat){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat);
+    m.position.set(cx, cy, cz);
+    scene.add(m);
+    return m;
+  }
+  function addPlane(scene, cx, cy, cz, w, h, mat, rotY=0){
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.position.set(cx, cy, cz); m.rotation.y = rotY;
+    scene.add(m); return m;
+  }
+
+  function makeDesk(scene, x, z){
+    const g = new THREE.Group();
+    const topY = 0.62;
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.46), MAT.deskTop);
+    top.position.set(0, topY, 0); g.add(top);
+    const legGeo = new THREE.BoxGeometry(0.04, topY, 0.04);
+    for(const sx of [-0.27,0.27]) for(const sz of [-0.19,0.19]){
+      const leg = new THREE.Mesh(legGeo, MAT.metal); leg.position.set(sx, topY/2, sz); g.add(leg);
+    }
+    // 椅子は机より+Z側（黒板と反対＝手前）に置き、生徒が黒板(-Z方向)を向いて座る形にする
+    const seatY = 0.4;
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.04, 0.4), MAT.chair);
+    seat.position.set(0, seatY, 0.5); g.add(seat);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.05), MAT.chair);
+    back.position.set(0, seatY+0.22, 0.68); g.add(back);
+    const clegGeo = new THREE.BoxGeometry(0.035, seatY, 0.035);
+    for(const sx of [-0.17,0.17]) for(const sz of [0.33,0.67]){
+      const leg = new THREE.Mesh(clegGeo, MAT.metal); leg.position.set(sx, seatY/2, sz); g.add(leg);
+    }
+    g.position.set(x, 0, z); scene.add(g);
+    return g;
+  }
+
+  /* ---------- 作り付けの凹み棚（壁に穴が開いていて中に物が入って見える）＋落下する物 ---------- */
+  const fallItems = []; // {mesh, home:{x,y,z}, vel:{x,y,z}, falling:bool, angVel}
+  function makeNookShelf(scene, wallX, side, z){
+    // wallX: 棚がある側の壁のx座標（例: -halfWや+halfW）
+    // side: -1(左壁、部屋の内側=+X方向) / +1(右壁、部屋の内側=-X方向)
+    const caseW = 1.1, caseH = 1.7, caseDepth = 0.42;
+    const innerX0 = wallX - side*caseDepth; // 部屋の内側の奥行き終端
+    const midX = (wallX + innerX0)/2;
+
+    // 背板（壁に密着、これが「奥」に見える面）
+    addBox(scene, wallX - side*0.01, caseH/2, z, 0.02, caseH, caseW, MAT.shelfIn);
+    // 上下の板
+    addBox(scene, midX, caseH, z, caseDepth, 0.05, caseW, MAT.shelf);
+    addBox(scene, midX, 0.02, z, caseDepth, 0.05, caseW, MAT.shelf);
+    // 左右の側板（幅方向の端）
+    addBox(scene, midX, caseH/2, z-caseW/2, caseDepth, caseH, 0.04, MAT.shelf);
+    addBox(scene, midX, caseH/2, z+caseW/2, caseDepth, caseH, 0.04, MAT.shelf);
+    // 中段の棚板（2段）
+    const levelYs = [caseH*0.34, caseH*0.67];
+    for(const ly of levelYs){
+      addBox(scene, midX, ly, z, caseDepth, 0.04, caseW*0.94, MAT.shelf);
+    }
+
+    // 段ごとに物（本立て風の箱・小物）を並べる。物理的には別メッシュとしてワールド座標で管理
+    const levels = [0.06, levelYs[0]+0.02, levelYs[1]+0.02];
+    const itemMats = [MAT.itemA, MAT.itemB, MAT.itemC, MAT.itemD];
+    let mi = 0;
+    levels.forEach((baseY, li) => {
+      const count = 3;
+      for(let k=0;k<count;k++){
+        const sw = 0.1 + prand(li*10+k)*0.05;
+        const sh = 0.16 + prand(li*10+k+3)*0.14;
+        const sd = caseDepth*0.72;
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(sd, sh, sw), itemMats[mi % itemMats.length]);
+        mi++;
+        const homeX = midX - side*0.02;
+        const homeY = baseY + sh/2;
+        const homeZ = z - caseW*0.36 + k*(caseW*0.32);
+        mesh.position.set(homeX, homeY, homeZ);
+        mesh.rotation.y = (prand(li*20+k)-0.5)*0.15;
+        scene.add(mesh);
+        fallItems.push({
+          mesh, home:{x:homeX, y:homeY, z:homeZ},
+          vel:{x:0, y:0, z:0}, falling:false, angVel:{x:0,y:0,z:0},
+          side, floorY: homeY
+        });
+      }
+    });
+  }
+
+  /* ---------- 教室構築（黒板が奥、窓が側面、左壁=扉、右壁=凹み棚） ---------- */
+  const ROOM_W = 4.6, ROOM_D = 5.2, ROOM_H = 2.9;
+  function buildRoom(scene){
+    const halfW = ROOM_W/2, halfD = ROOM_D/2;
+    // 床・天井
+    addBox(scene, 0, -0.05, 0, ROOM_W, 0.1, ROOM_D, MAT.floor);
+    addBox(scene, 0, ROOM_H+0.05, 0, ROOM_W, 0.1, ROOM_D, MAT.ceil);
+    // 奥の壁＋黒板（時計と重ならないよう黒板を少し下げる。黒板をフレームより手前に出す）
+    addBox(scene, 0, ROOM_H/2, -halfD, ROOM_W, ROOM_H, 0.15, MAT.wall);
+    addBox(scene, 0, 1.28, -halfD+0.09, 2.75, 1.25, 0.05, MAT.frame);
+    addPlane(scene, 0, 1.28, -halfD+0.13, 2.6, 1.05, MAT.blackboard, 0);
+    addPlane(scene, 0, 2.35, -halfD+0.1, 0.42, 0.42, MAT.clock, 0);
+    // 手前の壁（扉開口のみ。左右に柱状の壁は作らない）
+    addBox(scene, 0, ROOM_H-0.4, halfD, ROOM_W, 0.8, 0.15, MAT.wall);
+    // 側面の壁
+    addBox(scene, -halfW, ROOM_H/2, 0, 0.15, ROOM_H, ROOM_D, MAT.wall);
+    addBox(scene,  halfW, ROOM_H/2, 0, 0.15, ROOM_H, ROOM_D, MAT.wall);
+    // 左壁：奥にドア（窓はなし）
+    const doorZ = -halfD*0.5, doorH = 2.0, doorW2 = 0.95;
+    addBox(scene, -halfW+0.05, doorH/2, doorZ, 0.04, doorH+0.08, doorW2+0.1, MAT.frame);
+    addPlane(scene, -halfW+0.14, doorH/2, doorZ, doorW2, doorH, MAT.door, Math.PI/2);
+    // 右壁：奥行きのある凹み棚（黒板に近い奥寄りに設置、中に物が入って見える。窓はなし）
+    makeNookShelf(scene, halfW, 1, -halfD*0.45);
+    // 机（2行×3列、黒板を向く。中央1台だけがカメラ正面に迫らないよう奥行きに余裕を持たせる）
+    const cols = [-1.1, 0, 1.1];
+    const rows = [-0.1, 1.0];
+    for(const rz of rows){ for(const cx of cols){ makeDesk(scene, cx, rz); } }
+  }
+
+  /* ---------- カメラ・シーン初期化 ---------- */
+  let scene, camera, renderer;
+  const canvas = document.getElementById('quake3d-canvas');
+  const HOME_CAM = { x:0, y:1.62, z: ROOM_D/2 - 0.75, pitch:-0.22, yaw:0 };
+  const camState = { x:0, y:1.5, z:0, pitch:0, yaw:0 };
+
+  function resetCamHome(){
+    camState.x = HOME_CAM.x; camState.y = HOME_CAM.y; camState.z = HOME_CAM.z;
+    camState.pitch = HOME_CAM.pitch; camState.yaw = HOME_CAM.yaw;
+  }
+
+  function initScene(){
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf3f6f8);
+    scene.fog = new THREE.Fog(0xf3f6f8, 9, 16);
+
+    camera = new THREE.PerspectiveCamera(62, 1, 0.05, 60);
+    camera.rotation.order = 'YXZ';
+    resetCamHome();
+
+    renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xb8bcae, 1.6));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const dir = new THREE.DirectionalLight(0xfff6e0, 1.5);
+    dir.position.set(-3, 6, 2); scene.add(dir);
+    const dir2 = new THREE.DirectionalLight(0xf0f6ff, 0.7);
+    dir2.position.set(3, 5, -2); scene.add(dir2);
+
+    buildMaterials();
+    buildRoom(scene);
+
+    resizeRenderer();
+  }
+
+  function resizeRenderer(){
+    const el = document.getElementById('shake-root');
+    if (!el) return;
+    const w = el.clientWidth || 1, h = el.clientHeight || 1;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+  addEventListener('resize', resizeRenderer);
+
+  /* ---------- 地震ゆれ制御 ---------- */
+  const quake = {
+    running: false,
+    elapsedMs: 0,
+    durationMs: 6000,
+    intensity: 3,
+    onDone: null,
+    fallStartSec: 0.9 // 揺れ開始からこの秒数後に物が落ち始める
+  };
+
+  function intensityToAmp(level){ return 0.02 + level*0.012; }
+
+  function startShake(durationSec, intensityLevel, onDone){
+    quake.running = true;
+    quake.elapsedMs = 0;
+    quake.durationMs = durationSec * 1000;
+    quake.intensity = intensityLevel;
+    quake.onDone = onDone;
+    fallItems.forEach(it => { it.falling = false; it.vel.x=0; it.vel.y=0; it.vel.z=0; it.angVel.x=0; it.angVel.y=0; it.angVel.z=0; });
+  }
+
+  function resetQuake(){
+    quake.running = false;
+    quake.elapsedMs = 0;
+    camState.x = HOME_CAM.x; camState.y = HOME_CAM.y; camState.z = HOME_CAM.z;
+    camState.pitch = HOME_CAM.pitch; camState.yaw = HOME_CAM.yaw;
+    crouchState.active = false; crouchState.amount = 0;
+    fallItems.forEach(it => {
+      it.mesh.position.set(it.home.x, it.home.y, it.home.z);
+      it.mesh.rotation.set(0,0,0);
+      it.falling = false;
+    });
+  }
+
+  const crouchState = { active:false, amount:0 };
+  function setCrouch(on){ /* 視点変化は行わない仕様のため何もしない */ }
+
+  function updateQuake(dtSec){
+    if (!quake.running) return;
+    quake.elapsedMs += dtSec*1000;
+    const progress = Math.min(quake.elapsedMs / quake.durationMs, 1);
+    let envelope;
+    if (progress < 0.15) envelope = progress/0.15;
+    else if (progress < 0.7) envelope = 1;
+    else envelope = Math.max(0, 1-(progress-0.7)/0.3);
+
+    const amp = intensityToAmp(quake.intensity) * envelope;
+    const t = quake.elapsedMs / 1000;
+    const dx = Math.sin(t*18)*amp + Math.sin(t*7.3)*amp*0.3;
+    const dy = Math.cos(t*21)*amp*0.4;
+    const dz = Math.sin(t*15.5)*amp*0.25;
+    const rotZ = Math.sin(t*13)*envelope*0.045;
+    const rotX = Math.cos(t*11)*envelope*0.02;
+
+    camState.shakeX = dx; camState.shakeY = dy; camState.shakeZ = dz;
+    camState.shakeRotZ = rotZ; camState.shakeRotX = rotX;
+
+    // 棚の物：一定時間後、envelopeが十分なら落下開始
+    const elapsedSec = quake.elapsedMs/1000;
+    if (elapsedSec > quake.fallStartSec && envelope > 0.5){
+      fallItems.forEach((it, i) => {
+        if (!it.falling && prand(i*7 + Math.floor(elapsedSec*3)) > 0.7){
+          it.falling = true;
+          const outward = it.side ? -it.side : (prand(i+2)>0.5?1:-1); // 棚の前方＝部屋の内側へ
+          it.vel.x = outward * (0.35 + prand(i+1)*0.25);
+          it.vel.y = 0;
+          it.vel.z = (prand(i+9)-0.5)*0.08;
+          it.angVel.x = (prand(i+3)-0.5)*1.2;
+          it.angVel.y = (prand(i+5)-0.5)*1.2;
+          it.angVel.z = (prand(i+7)-0.5)*1.2;
+          it.onFloor = false; // まだ床に落ちきっていない（棚板の上を滑っている段階）
+        }
+      });
+    }
+    // 落下シミュレーション（簡易重力）。棚の前方へ十分出たら部屋の床まで落ち、それ以外は棚板の上に留まる
+    fallItems.forEach(it => {
+      if (!it.falling) return;
+      const outward = it.side ? -it.side : 1;
+      const traveled = (it.mesh.position.x - it.home.x) * outward; // 前方への移動距離
+      const clearedShelf = traveled > 0.32; // 棚板の縁（奥行き分）を越えたら棚から落ちる
+
+      it.vel.y -= (clearedShelf ? 2.4 : 0) * dtSec; // 棚板の上にいる間は重力を効かせない（滑るだけ）
+      it.mesh.position.x += it.vel.x * dtSec;
+      it.mesh.position.y += it.vel.y * dtSec;
+      it.mesh.position.z += it.vel.z * dtSec;
+      it.mesh.rotation.x += it.angVel.x * dtSec;
+      it.mesh.rotation.y += it.angVel.y * dtSec;
+      it.mesh.rotation.z += it.angVel.z * dtSec;
+
+      const floorY = clearedShelf ? 0.05 : it.floorY;
+      if (it.mesh.position.y < floorY){
+        it.mesh.position.y = floorY;
+        it.vel.x *= 0.4; it.vel.y = 0; it.vel.z *= 0.4;
+        it.angVel.x *= 0.3; it.angVel.y *= 0.3; it.angVel.z *= 0.3;
+      }
+      // 手前方向のみ許容し、奥（背板側）へは戻さない。左右のはみ出しも抑える
+      if (it.home){
+        const maxDx = 1.1, maxDz = 0.35;
+        const dx = it.mesh.position.x - it.home.x, dz = it.mesh.position.z - it.home.z;
+        if (Math.abs(dx) > maxDx) it.mesh.position.x = it.home.x + Math.sign(dx)*maxDx;
+        if ((dx*outward) < 0) it.mesh.position.x = it.home.x; // 奥へ戻ろうとしたら元の奥行き位置に留める
+        if (Math.abs(dz) > maxDz) it.mesh.position.z = it.home.z + Math.sign(dz)*maxDz;
+      }
+    });
+
+    if (progress >= 1){
+      quake.running = false;
+      camState.shakeX = 0; camState.shakeY = 0; camState.shakeZ = 0;
+      camState.shakeRotZ = 0; camState.shakeRotX = 0;
+      const cb = quake.onDone; quake.onDone = null;
+      if (cb) cb();
+    }
+  }
+
+  /* ---------- ループ ---------- */
+  let lastT = 0;
+  function animate(t){
+    requestAnimationFrame(animate);
+    let dt = (t - lastT)/1000; lastT = t;
+    if (!isFinite(dt) || dt <= 0) dt = 1/60;
+    dt = Math.min(dt, 1/30); // dtクランプ（120Hz対策）
+
+    const screenQuake = document.getElementById('screen-quake');
+    if (!screenQuake || !screenQuake.classList.contains('active')) return;
+
+    updateQuake(dt);
+
+    // しゃがみ量をなめらかに補間
+    const targetCrouch = crouchState.active ? 0.55 : 0;
+    crouchState.amount += (targetCrouch - crouchState.amount) * Math.min(1, dt*6);
+
+    const sx = camState.shakeX||0, sy = camState.shakeY||0, sz = camState.shakeZ||0;
+    const srz = camState.shakeRotZ||0, srx = camState.shakeRotX||0;
+
+    camera.position.set(camState.x + sx, camState.y - crouchState.amount + sy, camState.z + sz);
+    camera.rotation.set(camState.pitch + srx, camState.yaw, srz, 'YXZ');
+
+    resizeRenderer();
+    renderer.render(scene, camera);
+  }
+
+  function init(){
+    initScene();
+    requestAnimationFrame(t => { lastT = t; animate(t); });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.Quake3D = {
+    reset: resetQuake,
+    startShake,
+    crouch: setCrouch
+  };
 })();
 </script>
 </body>
