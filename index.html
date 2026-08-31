@@ -103,7 +103,7 @@
   #screen-quake{
     background: #eef3f6;
     flex-direction: column;
-    padding-top: clamp(10px, 2vh, 24px);
+    padding: clamp(10px, 2vh, 20px) 0 clamp(8px, 1.4vh, 14px);
   }
   #shake-root{
     width:100%;
@@ -112,39 +112,19 @@
     position:relative;
     will-change: transform;
   }
-  .hide-message{
-    position:absolute; left:50%; top:50%;
-    transform: translate(-50%,-50%);
-    z-index: 6;
-    text-align:center;
-    font-size: clamp(24px, 4vw, 40px);
-    font-weight:700;
-    color: var(--ink);
-    background: rgba(255,255,255,.92);
-    padding: 20px 32px;
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,.12);
-    line-height:1.6;
-    opacity: 0;
-    pointer-events:none;
-    transition: opacity .3s ease;
-    max-width: 84%;
-  }
-  .hide-message.show{ opacity:1; }
   .room{
     position:absolute; inset: 0;
     display:flex; align-items:flex-end; justify-content:center;
-    padding-bottom: 6vh;
   }
   .room-floor{
-    position:absolute; left:0; right:0; bottom:0; height: 14vh;
+    position:absolute; left:0; right:0; bottom:0; height: 11vh;
     background: #cbb18a;
     border-top: 4px solid #a9814f;
   }
   .room-inner{
     position:relative;
     width:min(920px, 92vw);
-    height: 78vh;
+    height: 100%;
     background: var(--paper);
     border: 3px solid var(--line);
     border-radius: 12px;
@@ -223,57 +203,55 @@
     border-radius: 4px 4px 0 0;
   }
 
-  .quake-banner{
+  .quake-banner-row{
     position: relative;
-    width: min(920px, 92vw);
-    margin: 0 auto clamp(10px, 1.6vh, 16px);
-    padding: clamp(10px, 2vw, 18px) clamp(12px, 3vw, 28px);
-    border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    gap: clamp(10px, 1.6vw, 18px);
+    padding: 0 clamp(10px, 2vw, 20px);
+    margin-top: -9.5vh;
+    z-index: 6;
+  }
+  .quake-banner{
+    flex: 1 1 auto;
+    max-width: min(820px, 82vw);
+    padding: clamp(8px, 1.4vw, 14px) clamp(16px, 3vw, 32px);
+    border-radius: 10px;
     background: var(--warn);
     color:#fff;
-    display:flex; align-items:center; gap: 14px;
     font-weight:700;
-    font-size: clamp(16px, 2.4vw, 24px);
-    z-index: 5;
+    font-size: clamp(13px, 1.9vw, 19px);
+    text-align:center;
+    line-height:1.5;
     opacity: 0;
-    transform: translateY(-12px);
+    transform: translateY(12px);
     transition: opacity .35s ease, transform .35s ease;
   }
   .quake-banner.show{ opacity: 1; transform: translateY(0); }
-  .quake-banner .dot{
-    width: 14px; height:14px; border-radius:50%;
-    background:#fff;
-    animation: blink 0.6s steps(1) infinite;
-  }
-  @keyframes blink{ 50%{ opacity:.2; } }
-
-  .quake-caption{
-    position:absolute; left:0; right:0; bottom: 3%;
-    text-align:center;
-    font-size: clamp(15px, 2vw, 20px);
-    color: var(--ink-soft);
-    z-index: 5;
-    padding: 0 16px;
-    line-height:1.7;
-  }
 
   .next-phase-btn{
-    position:absolute; right: clamp(12px,3vw,28px); bottom: clamp(12px,3vw,28px);
-    min-height: 48px; min-width: 120px;
-    padding: 10px 22px;
+    flex: 0 0 auto;
+    min-height: 40px; min-width: 100px;
+    padding: 8px 18px;
     border-radius: 999px;
     background: var(--paper);
     color: var(--ink-soft);
     border: 2px solid var(--line);
-    font-size: clamp(13px, 1.6vw, 16px);
+    font-size: clamp(12px, 1.5vw, 15px);
     font-weight:700;
-    z-index: 10;
     opacity: 0;
     pointer-events:none;
     transition: opacity .3s ease, background .12s ease;
   }
   .next-phase-btn.show{ opacity: 1; pointer-events:auto; }
   .next-phase-btn:active{ background: var(--accent-soft); }
+
+  @media (max-width: 560px){
+    .quake-banner-row{
+      flex-direction: column;
+      margin-top: -10.5vh;
+    }
+    .quake-banner{ max-width: 92vw; }
+  }
 
   /* ---------- クイズ画面 ---------- */
   #screen-quiz{
@@ -285,14 +263,14 @@
   }
   .quiz-image-wrap{
     margin: 0 auto 20px;
-    max-width: min(360px, 70vw);
-    max-height: 28vh;
+    max-width: min(504px, 84vw);
+    max-height: 39.2vh;
     display:flex;
     justify-content:center;
   }
   .quiz-image-wrap img{
     max-width: 100%;
-    max-height: 28vh;
+    max-height: 39.2vh;
     border-radius: 12px;
     object-fit: contain;
   }
@@ -310,9 +288,9 @@
   }
   .choice-btn{
     width: clamp(120px, 22vw, 200px);
-    height: clamp(120px, 22vw, 200px);
+    height: clamp(72px, 13.2vw, 120px);
     border-radius: 24px;
-    font-size: clamp(48px, 8vw, 72px);
+    font-size: clamp(36px, 6vw, 52px);
     font-weight:700;
     display:flex; align-items:center; justify-content:center;
     transition: transform .08s ease, box-shadow .08s ease;
@@ -540,6 +518,60 @@
     display:none;
   }
   .q-edit-img-remove.show{ display:inline-block; }
+  .q-edit-img-url{
+    display:flex; align-items:center; gap:8px;
+  }
+  .q-edit-img-url label{ font-size:12px; color: var(--ink-soft); width: 48px; flex:0 0 auto; }
+  .q-edit-img-url input[type=text]{
+    flex:1; height: 38px; padding: 0 10px;
+    border:2px solid var(--line); border-radius:8px;
+    font-family: inherit; font-size: 13px;
+  }
+  .q-edit-img-url button{
+    height:38px; padding: 0 12px;
+    border-radius:8px; border:2px solid var(--line);
+    background: var(--paper); font-size:13px; color: var(--ink-soft);
+    flex: 0 0 auto;
+  }
+  .q-edit-delete-row{
+    display:flex; justify-content:flex-end;
+    padding-top: 4px;
+    border-top: 1px dashed var(--line);
+    margin-top: 4px;
+  }
+  .q-edit-delete-btn{
+    height: 36px; padding: 0 14px;
+    border-radius: 8px; border:none;
+    background: var(--warn-soft); color: var(--warn);
+    font-size: 13px; font-weight:700;
+  }
+  .q-add-btn{
+    display:block; width:100%;
+    min-height: 48px;
+    margin-top: 6px;
+    border-radius: 10px;
+    border: 2px dashed var(--line);
+    background: transparent;
+    color: var(--accent);
+    font-size: 15px; font-weight:700;
+  }
+  .panel-save-section{
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    text-align:center;
+  }
+  .panel-save-btn{
+    display:block; width:100%;
+    min-height: 52px;
+    border-radius: 12px;
+    background: var(--ok);
+    color:#fff;
+    font-size: 16px; font-weight:700;
+  }
+  .panel-save-note{
+    font-size: 12px; color: var(--ink-soft);
+    margin: 8px 0 0;
+  }
   .panel-close{
     display:block; margin: 6px auto 0;
     min-height: 48px; min-width: 140px;
@@ -563,20 +595,15 @@
   <section id="screen-idle" class="screen active">
     <div class="idle-card">
       <div class="idle-mark">🏫</div>
-      <p class="idle-title">じしんが<ruby>来<rt>き</rt></ruby>たときの<ruby>練習<rt>れんしゅう</rt></ruby>をするよ</p>
-      <p class="idle-sub">がめんをタップすると<br>じしんが<ruby>始<rt>はじ</rt></ruby>まります</p>
+      <p class="idle-title"><ruby>地震<rt>じしん</rt></ruby>がきたときの<ruby>練習<rt>れんしゅう</rt></ruby>をするよ</p>
+      <p class="idle-sub"><ruby>画面<rt>がめん</rt></ruby>をタップすると<br><ruby>練習<rt>れんしゅう</rt></ruby>が<ruby>始<rt>はじ</rt></ruby>まります</p>
       <button class="start-btn" id="btn-start">はじめる</button>
     </div>
   </section>
 
   <!-- 地震発生画面 -->
   <section id="screen-quake" class="screen">
-    <div class="quake-banner" id="quake-banner">
-      <span class="dot"></span>
-      <span id="banner-text">きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby></span>
-    </div>
     <div id="shake-root">
-      <div class="hide-message" id="hide-message">机の下にかくれて、<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう</div>
       <div class="room">
         <div class="room-inner">
           <div class="window w1"></div>
@@ -605,7 +632,11 @@
         </div>
         <div class="room-floor"></div>
       </div>
-      <p class="quake-caption" id="quake-caption">まもなく、つよいゆれが来ます</p>
+    </div>
+    <div class="quake-banner-row" id="quake-banner-row">
+      <div class="quake-banner" id="quake-banner">
+        <span id="banner-text">きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby></span>
+      </div>
       <button class="next-phase-btn" id="btn-to-hide">つぎへ</button>
     </div>
   </section>
@@ -646,7 +677,15 @@
 <div id="teacher-panel">
   <div class="panel-card">
     <p class="panel-title">先生用の設定</p>
-    <p class="panel-sub">生徒には見せない設定パネルです</p>
+
+    <div class="panel-section">
+      <span class="panel-label">ゆれが始まるまでの<ruby>時間<rt>じかん</rt></ruby>（秒）</span>
+      <div class="stepper">
+        <button data-step="wait" data-delta="-1">−</button>
+        <input type="text" id="input-wait" value="3" inputmode="numeric">
+        <button data-step="wait" data-delta="1">＋</button>
+      </div>
+    </div>
 
     <div class="panel-section">
       <span class="panel-label">ゆれの長さ（秒）</span>
@@ -676,6 +715,12 @@
     <div class="panel-section">
       <span class="panel-label">○×もんだい（あとで文言を変えられます）</span>
       <div id="q-edit-list"></div>
+      <button class="q-add-btn" id="btn-add-question">＋ もんだいを追加</button>
+    </div>
+
+    <div class="panel-section panel-save-section">
+      <button class="panel-save-btn" id="btn-save-html">この設定でHTMLをほぞんする</button>
+      <p class="panel-save-note">今の設定を入れた新しいファイルがダウンロードされます</p>
     </div>
 
     <button class="panel-close" id="btn-panel-close">とじる</button>
@@ -687,7 +732,9 @@
   "use strict";
 
   /* ---------------- 状態管理 ---------------- */
+  /* SAVED_STATE_START */
   const state = {
+    waitSec: 3,
     durationSec: 6,
     intensity: 3, // 1〜5
     soundOn: true,
@@ -701,6 +748,7 @@
     quizIndex: 0,
     results: [] // { text, answer(bool), chosen(bool), correct(bool) }
   };
+  /* SAVED_STATE_END */
 
   /* ---------------- 画面切り替え ---------------- */
   const screens = {
@@ -765,7 +813,6 @@
   const shakeRoot = document.getElementById('shake-root');
   const banner = document.getElementById('quake-banner');
   const bannerText = document.getElementById('banner-text');
-  const caption = document.getElementById('quake-caption');
   const btnToHide = document.getElementById('btn-to-hide');
   const shelfLeft = document.getElementById('shelf-left');
   const shelfRight = document.getElementById('shelf-right');
@@ -828,40 +875,31 @@
     quakeAnim.raf = requestAnimationFrame(stepQuake);
   }
 
-  const hideMessage = document.getElementById('hide-message');
-
   function startQuakeSequence(){
     showScreen('quake');
     banner.classList.remove('show');
     btnToHide.classList.remove('show');
-    hideMessage.classList.remove('show');
-    caption.textContent = '';
-    bannerText.textContent = 'きんきゅう地震速報';
+    bannerText.innerHTML = 'きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby>';
 
-    // フェーズ0: 教室をそのまま4秒間見せる（まだ何も起きない）
+    // フェーズ0: 教室をそのまま設定秒数だけ見せる（まだ何も起きない）
     setTimeout(() => {
       // フェーズ1: 速報
       banner.classList.add('show');
-      caption.textContent = 'まもなく、つよいゆれが来ます';
       playAlertChime();
 
       setTimeout(() => {
         // フェーズ2: 本震開始
-        caption.textContent = 'ゆれています。頭を守ってね';
-        bannerText.textContent = 'じしん はっせい';
+        bannerText.innerHTML = '<ruby>地震<rt>じしん</rt></ruby> はっせい　ゆれています。<ruby>机<rt>つくえ</rt></ruby>の<ruby>下<rt>した</rt></ruby>にかくれて<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう';
         quakeAnim.running = true;
         quakeAnim.lastTs = 0;
         quakeAnim.elapsed = 0;
         quakeAnim.raf = requestAnimationFrame(stepQuake);
       }, 1700);
-    }, 4000);
+    }, state.waitSec * 1000);
   }
 
   function onQuakeSettled(){
-    caption.textContent = '';
-    bannerText.textContent = 'ゆれは おさまりました';
-    setTimeout(() => { banner.classList.remove('show'); }, 1400);
-    hideMessage.classList.add('show');
+    bannerText.innerHTML = 'ゆれは おさまりました';
     btnToHide.classList.add('show');
   }
 
@@ -984,10 +1022,12 @@
   /* ---------------- 先生用パネル ---------------- */
   const teacherFab = document.getElementById('teacher-fab');
   const teacherPanel = document.getElementById('teacher-panel');
+  const inputWait = document.getElementById('input-wait');
   const inputDuration = document.getElementById('input-duration');
   const inputIntensity = document.getElementById('input-intensity');
   const switchSound = document.getElementById('switch-sound');
   const qEditList = document.getElementById('q-edit-list');
+  const btnAddQuestion = document.getElementById('btn-add-question');
 
   teacherFab.addEventListener('click', () => {
     teacherPanel.classList.add('open');
@@ -1000,11 +1040,52 @@
     if (e.target === teacherPanel) teacherPanel.classList.remove('open');
   });
 
+  /* ---------------- HTML保存（この設定を埋め込んだファイルをDL） ---------------- */
+  document.getElementById('btn-save-html').addEventListener('click', () => {
+    try {
+      const savedState = {
+        waitSec: state.waitSec,
+        durationSec: state.durationSec,
+        intensity: state.intensity,
+        soundOn: state.soundOn,
+        questions: state.questions.map(q => ({ text: q.text, answer: q.answer, image: q.image })),
+        quizIndex: 0,
+        results: []
+      };
+      // JSON化し、スクリプトタグの早期終了を防ぐためエスケープする
+      const jsonText = JSON.stringify(savedState, null, 4).replace(/<\/script/gi, '<\\/script');
+      const newStateBlock = '  /* SAVED_STATE_START */\n  const state = ' + jsonText + ';\n  /* SAVED_STATE_END */\n';
+
+      const currentHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const blockPattern = /\/\* SAVED_STATE_START \*\/[\s\S]*?\/\* SAVED_STATE_END \*\/\n?/;
+      if (!blockPattern.test(currentHtml)) {
+        alert('ほぞんできませんでした。ページを読み込みなおしてからもう一度お試しください。');
+        return;
+      }
+      const newHtml = currentHtml.replace(blockPattern, newStateBlock);
+
+      const blob = new Blob([newHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'jishin-sim.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (err) {
+      alert('ほぞんできませんでした。ページを読み込みなおしてからもう一度お試しください。');
+    }
+  });
+
   document.querySelectorAll('.stepper button').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.step;
       const delta = parseInt(btn.dataset.delta, 10);
-      if (key === 'duration') {
+      if (key === 'wait') {
+        state.waitSec = Math.min(15, Math.max(0, state.waitSec + delta));
+        inputWait.value = state.waitSec;
+      } else if (key === 'duration') {
         state.durationSec = Math.min(15, Math.max(3, state.durationSec + delta));
         inputDuration.value = state.durationSec;
       } else if (key === 'intensity') {
@@ -1012,6 +1093,12 @@
         inputIntensity.value = state.intensity;
       }
     });
+  });
+  inputWait.addEventListener('change', () => {
+    let v = parseInt(inputWait.value, 10);
+    if (isNaN(v)) v = 3;
+    state.waitSec = Math.min(15, Math.max(0, v));
+    inputWait.value = state.waitSec;
   });
   inputDuration.addEventListener('change', () => {
     let v = parseInt(inputDuration.value, 10);
@@ -1080,6 +1167,18 @@
       fileInput.accept = 'image/*';
       fileInput.style.display = 'none';
 
+      const row4 = document.createElement('div');
+      row4.className = 'q-edit-img-url';
+      const label4 = document.createElement('label');
+      label4.textContent = 'URL';
+      const urlInput = document.createElement('input');
+      urlInput.type = 'text';
+      urlInput.placeholder = '画像のURLをはりつけ';
+      urlInput.value = (state.questions[i].image && !state.questions[i].image.startsWith('data:')) ? state.questions[i].image : '';
+      const urlSetBtn = document.createElement('button');
+      urlSetBtn.type = 'button';
+      urlSetBtn.textContent = 'ここに入れる';
+
       function refreshImgUI(){
         if (state.questions[i].image) {
           preview.src = state.questions[i].image;
@@ -1101,6 +1200,7 @@
         const reader = new FileReader();
         reader.onload = () => {
           state.questions[i].image = reader.result;
+          urlInput.value = '';
           refreshImgUI();
         };
         reader.readAsDataURL(file);
@@ -1108,6 +1208,13 @@
       removeBtn.addEventListener('click', () => {
         state.questions[i].image = null;
         fileInput.value = '';
+        urlInput.value = '';
+        refreshImgUI();
+      });
+      urlSetBtn.addEventListener('click', () => {
+        const v = urlInput.value.trim();
+        if (!v) return;
+        state.questions[i].image = v;
         refreshImgUI();
       });
 
@@ -1116,12 +1223,40 @@
       row3.appendChild(removeBtn);
       row3.appendChild(fileInput);
 
+      row4.appendChild(label4);
+      row4.appendChild(urlInput);
+      row4.appendChild(urlSetBtn);
+
+      const row5 = document.createElement('div');
+      row5.className = 'q-edit-delete-row';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'q-edit-delete-btn';
+      deleteBtn.textContent = 'このもんだいをけす';
+      deleteBtn.addEventListener('click', () => {
+        if (state.questions.length <= 1) return;
+        state.questions.splice(i, 1);
+        renderQuestionEditors();
+      });
+      if (state.questions.length <= 1) {
+        deleteBtn.disabled = true;
+        deleteBtn.style.opacity = '.4';
+      }
+      row5.appendChild(deleteBtn);
+
       wrap.appendChild(row1);
       wrap.appendChild(row2);
       wrap.appendChild(row3);
+      wrap.appendChild(row4);
+      wrap.appendChild(row5);
       qEditList.appendChild(wrap);
     });
   }
+
+  btnAddQuestion.addEventListener('click', () => {
+    state.questions.push({ text: "あたらしいもんだい", answer: true, image: null });
+    renderQuestionEditors();
+  });
 
 })();
 </script>
