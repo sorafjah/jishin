@@ -76,7 +76,7 @@
     font-size: clamp(20px, 3vw, 30px);
     font-weight:700;
     color: var(--ink);
-    margin: 0 0 10px;
+    margin: 0 0 32px;
     line-height:1.5;
   }
   .idle-sub{
@@ -200,7 +200,7 @@
   .quiz-choices{
     display:flex; gap: clamp(16px, 3vw, 32px);
     justify-content:center;
-    margin-bottom: 28px;
+    margin-bottom: 14px;
   }
   .choice-btn{
     width: clamp(120px, 22vw, 200px);
@@ -224,12 +224,13 @@
   .choice-btn:active{ transform: translateY(4px); }
   .choice-maru:active{ box-shadow: 0 2px 0 #1f5c3d; }
   .choice-batsu:active{ box-shadow: 0 2px 0 #8a3620; }
-  .choice-btn:disabled{ opacity:.5; pointer-events:none; }
+  .choice-btn:disabled{ opacity:1; pointer-events:none; filter: saturate(.45) brightness(1.04); }
+  .choice-btn.selected{ outline: 4px solid var(--ink); outline-offset: 2px; }
 
   .quiz-feedback{
-    min-height: 96px;
+    min-height: 0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap: 8px;
+    gap: 6px;
   }
   .feedback-label{
     font-size: clamp(20px, 3vw, 28px);
@@ -242,7 +243,7 @@
     color: var(--ink-soft);
   }
   .next-q-btn{
-    margin-top: 18px;
+    margin-top: 10px;
     min-height: 56px; min-width: 180px;
     padding: 12px 30px;
     border-radius: 999px;
@@ -326,7 +327,7 @@
 
   /* ---------- 先生用パネル ---------- */
   #teacher-fab{
-    position: fixed; right: 14px; bottom: 14px;
+    position: fixed; left: 14px; top: calc(env(safe-area-inset-top,0) + 14px);
     width: 44px; height: 44px;
     background: transparent;
     border: none;
@@ -515,7 +516,6 @@
     <div class="idle-card">
       <div class="idle-mark">🏫</div>
       <p class="idle-title"><ruby>地震<rt>じしん</rt></ruby>がきたときの<ruby>練習<rt>れんしゅう</rt></ruby>をするよ</p>
-      <p class="idle-sub"><ruby>画面<rt>がめん</rt></ruby>をタップすると<br><ruby>練習<rt>れんしゅう</rt></ruby>が<ruby>始<rt>はじ</rt></ruby>まります</p>
       <button class="start-btn" id="btn-start">はじめる</button>
     </div>
   </section>
@@ -688,17 +688,104 @@
     }
   }
   function playCorrectSound(){
+    // 「ピンポーン」正解チャイム：澄んだ2音（ピン→ポーン、後の音を長めに伸ばす）
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
-    beep(720, now, 0.12, 0.12);
-    beep(960, now + 0.1, 0.16, 0.12);
+    const mkChime = (freq, startTime, dur, peak) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(peak, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + dur + 0.05);
+    };
+    mkChime(988, now, 0.28, 0.16);        // ピン
+    mkChime(1319, now + 0.16, 0.55, 0.16); // ポーン（長め）
   }
   function playWrongSound(){
+    // 「ふにゃふにゃ〜」不正解音：音程がゆらぎながら下降する、責めない柔らかい音
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
-    beep(300, now, 0.22, 0.1);
+    const dur = 0.55;
+    const steps = 40;
+    const curve = new Float32Array(steps);
+    for (let i = 0; i < steps; i++){
+      const progress = i/(steps-1);
+      const base = 380 + (170-380)*progress;
+      const wobble = Math.sin(progress*Math.PI*6) * 26 * (1-progress);
+      curve[i] = base + wobble;
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueCurveAtTime(curve, now, dur);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.13, now + 0.05);
+    gain.gain.linearRampToValueAtTime(0, now + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.05);
+  }
+  function playRumbleSound(durationSec){
+    // 本震開始時の「ゴゴゴゴ…」地鳴り音：低音ノイズ＋うなるような低周波振動
+    if (!state.soundOn) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const dur = Math.max(0.6, Math.min(durationSec || 3, 6));
+
+    // ノイズバッファ（ゴゴゴという質感のベース）
+    const bufferSize = Math.floor(ctx.sampleRate * dur);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++){
+      const white = Math.random()*2 - 1;
+      lastOut = (lastOut + 0.02*white) / 1.02; // ローパスがかったノイズ（ゴーッという質感）
+      data[i] = lastOut * 3.2;
+    }
+    const noiseSrc = ctx.createBufferSource();
+    noiseSrc.buffer = buffer;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.value = 160;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(0.16, now + 0.25);
+    noiseGain.gain.setValueAtTime(0.16, now + Math.max(0.3, dur-0.6));
+    noiseGain.gain.linearRampToValueAtTime(0, now + dur);
+
+    noiseSrc.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noiseSrc.start(now);
+    noiseSrc.stop(now + dur + 0.05);
+
+    // うなるような低音の振動（ゴゴゴという周期的な波）
+    const rumbleOsc = ctx.createOscillator();
+    rumbleOsc.type = 'sawtooth';
+    rumbleOsc.frequency.value = 42;
+    const rumbleLFO = ctx.createOscillator();
+    rumbleLFO.type = 'sine';
+    rumbleLFO.frequency.value = 7; // ゴゴゴという震え
+    const rumbleLFOGain = ctx.createGain();
+    rumbleLFOGain.gain.value = 0.09;
+    const rumbleGain = ctx.createGain();
+    rumbleGain.gain.setValueAtTime(0, now);
+    rumbleGain.gain.linearRampToValueAtTime(0.1, now + 0.25);
+    rumbleGain.gain.setValueAtTime(0.1, now + Math.max(0.3, dur-0.6));
+    rumbleGain.gain.linearRampToValueAtTime(0, now + dur);
+
+    rumbleLFO.connect(rumbleLFOGain);
+    rumbleLFOGain.connect(rumbleGain.gain);
+    rumbleOsc.connect(rumbleGain).connect(ctx.destination);
+    rumbleOsc.start(now); rumbleLFO.start(now);
+    rumbleOsc.stop(now + dur + 0.05); rumbleLFO.stop(now + dur + 0.05);
   }
 
   /* ---------------- 揺れアニメーション（3D教室はQuake3D側でrAF駆動） ---------------- */
@@ -730,6 +817,7 @@
       setTimeout(() => {
         // フェーズ2: 本震開始
         bannerText.innerHTML = '<ruby>地震<rt>じしん</rt></ruby> はっせい　ゆれています。<ruby>机<rt>つくえ</rt></ruby>の<ruby>下<rt>した</rt></ruby>にかくれて<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう';
+        playRumbleSound(state.durationSec);
         if (window.Quake3D) {
           window.Quake3D.startShake(state.durationSec, intensityToLevel(state.intensity), onQuakeSettled);
         } else {
@@ -767,6 +855,8 @@
     quizFeedback.innerHTML = '';
     btnMaru.disabled = false;
     btnBatsu.disabled = false;
+    btnMaru.classList.remove('selected');
+    btnBatsu.classList.remove('selected');
 
     if (q.image) {
       quizImage.src = q.image;
@@ -782,6 +872,7 @@
     const correct = (chosenTrue === q.answer);
     btnMaru.disabled = true;
     btnBatsu.disabled = true;
+    (chosenTrue ? btnMaru : btnBatsu).classList.add('selected');
     state.results.push({ text: q.text, answer: q.answer, chosen: chosenTrue, correct: correct });
 
     if (correct) playCorrectSound(); else playWrongSound();
@@ -1439,12 +1530,12 @@ import * as THREE from 'three';
         if (!it.falling && prand(i*7 + Math.floor(elapsedSec*3)) > 0.7){
           it.falling = true;
           const outward = it.side ? -it.side : (prand(i+2)>0.5?1:-1); // 棚の前方＝部屋の内側へ
-          it.vel.x = outward * (0.35 + prand(i+1)*0.25);
+          it.vel.x = outward * (0.55 + prand(i+1)*0.35);
           it.vel.y = 0;
           it.vel.z = (prand(i+9)-0.5)*0.08;
-          it.angVel.x = (prand(i+3)-0.5)*1.2;
-          it.angVel.y = (prand(i+5)-0.5)*1.2;
-          it.angVel.z = (prand(i+7)-0.5)*1.2;
+          it.angVel.x = (prand(i+3)-0.5)*2.2;
+          it.angVel.y = (prand(i+5)-0.5)*2.2;
+          it.angVel.z = (prand(i+7)-0.5)*2.2;
           it.onFloor = false; // まだ床に落ちきっていない（棚板の上を滑っている段階）
         }
       });
@@ -1456,7 +1547,7 @@ import * as THREE from 'three';
       const traveled = (it.mesh.position.x - it.home.x) * outward; // 前方への移動距離
       const clearedShelf = traveled > 0.32; // 棚板の縁（奥行き分）を越えたら棚から落ちる
 
-      it.vel.y -= (clearedShelf ? 2.4 : 0) * dtSec; // 棚板の上にいる間は重力を効かせない（滑るだけ）
+      it.vel.y -= (clearedShelf ? 9.8 : 0) * dtSec; // 棚板の上にいる間は重力を効かせない（滑るだけ）。落下は実際の重力加速度に近づける
       it.mesh.position.x += it.vel.x * dtSec;
       it.mesh.position.y += it.vel.y * dtSec;
       it.mesh.position.z += it.vel.z * dtSec;
