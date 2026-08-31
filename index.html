@@ -683,12 +683,18 @@
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
-    // 緊急地震速報を模した、2音の繰り返しチャイム（音源不使用・合成音）
-    for (let i = 0; i < 3; i++){
-      const t = now + i * 0.55;
-      beep(880, t, 0.18, 0.14);
-      beep(660, t + 0.22, 0.18, 0.14);
-    }
+    // 緊急地震速報を模した、2音の繰り返しチャイムを3回×2セット（セットの間に間を空ける）
+    const chimeSet = (startTime) => {
+      for (let i = 0; i < 3; i++){
+        const t = startTime + i * 0.55;
+        beep(880, t, 0.18, 0.14);
+        beep(660, t + 0.22, 0.18, 0.14);
+      }
+    };
+    const oneSetDuration = 2*0.55 + 0.22 + 0.18; // 3回セットの所要時間
+    const gapBetweenSets = 0.5;
+    chimeSet(now);
+    chimeSet(now + oneSetDuration + gapBetweenSets);
   }
   function playCorrectSound(){
     // 「ピンポーン」正解チャイム：澄んだ2音（ピン→ポーン、後の音を長めに伸ばす）
@@ -735,12 +741,15 @@
     osc.start(now);
     osc.stop(now + dur + 0.05);
   }
-  function playRumbleSound(durationSec){
-    // 本震開始時の地鳴り音：機械的な音を避けつつ、タブレット内蔵スピーカーでも聞こえる帯域に調整
+  function playRumbleSound(durationSec, levelMult, startDelay){
+    // 本震の地鳴り音：機械的な音を避けつつ、タブレット内蔵スピーカーでも聞こえる帯域に調整
+    // levelMult: 音量の倍率（1回目=1.0、弱める2回目=0.6程度を想定）
+    // startDelay: 呼び出し時点から何秒後に鳴らし始めるか（連続再生の2回目用）
     if (!state.soundOn) return;
     const ctx = getCtx();
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + (startDelay || 0);
     const dur = Math.max(0.6, Math.min(durationSec || 3, 6));
+    const lvl = levelMult !== undefined ? levelMult : 1;
 
     // ノイズバッファ（ゴーッという質感のベース。低すぎるとタブレットのスピーカーで聞こえないため帯域を調整）
     const bufferSize = Math.floor(ctx.sampleRate * dur);
@@ -762,16 +771,17 @@
 
     // ゆっくりした音量のうねり（地面が揺れているような不規則感。LFOで自然にゆらす）
     const noiseGain = ctx.createGain();
+    const noisePeak = 0.32 * lvl;
     noiseGain.gain.setValueAtTime(0, now);
-    noiseGain.gain.linearRampToValueAtTime(0.32, now + 0.3);
-    noiseGain.gain.setValueAtTime(0.32, now + Math.max(0.4, dur-0.7));
+    noiseGain.gain.linearRampToValueAtTime(noisePeak, now + 0.3);
+    noiseGain.gain.setValueAtTime(noisePeak, now + Math.max(0.4, dur-0.7));
     noiseGain.gain.linearRampToValueAtTime(0, now + dur);
 
     const swellLFO = ctx.createOscillator();
     swellLFO.type = 'sine';
     swellLFO.frequency.value = 0.9;
     const swellLFOGain = ctx.createGain();
-    swellLFOGain.gain.value = 0.08;
+    swellLFOGain.gain.value = 0.08 * lvl;
     swellLFO.connect(swellLFOGain);
     swellLFOGain.connect(noiseGain.gain);
 
@@ -781,9 +791,10 @@
 
     // 低めの唸り（サイン波2本のうなり）。タブレットで聞こえるよう周波数を少し上げる
     const rumbleGain = ctx.createGain();
+    const rumblePeak = 0.14 * lvl;
     rumbleGain.gain.setValueAtTime(0, now);
-    rumbleGain.gain.linearRampToValueAtTime(0.14, now + 0.3);
-    rumbleGain.gain.setValueAtTime(0.14, now + Math.max(0.4, dur-0.7));
+    rumbleGain.gain.linearRampToValueAtTime(rumblePeak, now + 0.3);
+    rumbleGain.gain.setValueAtTime(rumblePeak, now + Math.max(0.4, dur-0.7));
     rumbleGain.gain.linearRampToValueAtTime(0, now + dur);
     rumbleGain.connect(ctx.destination);
 
@@ -817,22 +828,32 @@
     bannerText.innerHTML = 'きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby>';
     if (window.Quake3D) window.Quake3D.reset();
 
+    // 速報チャイム：3回×2セット（セット間に間を空ける）の所要時間
+    const chimeOneSetSec = 2*0.55 + 0.22 + 0.18; // 1.5秒
+    const chimeGapSec = 0.5;
+    const chimeTotalSec = chimeOneSetSec*2 + chimeGapSec; // 3.5秒
+    const gapAfterChimeSec = 0.8; // 速報後、本震までの間
+
     // フェーズ0: 教室をそのまま設定秒数だけ見せる（まだ何も起きない）
     setTimeout(() => {
-      // フェーズ1: 速報
+      // フェーズ1: 速報（3回→間→3回）
       banner.classList.add('show');
       playAlertChime();
 
       setTimeout(() => {
-        // フェーズ2: 本震開始
+        // フェーズ2: 本震開始。地鳴りを「強め→少し弱め」の2回に分けて鳴らす
         bannerText.innerHTML = '<ruby>地震<rt>じしん</rt></ruby> はっせい　ゆれています。<ruby>机<rt>つくえ</rt></ruby>の<ruby>下<rt>した</rt></ruby>にかくれて<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう';
-        playRumbleSound(state.durationSec);
+        const rumbleGapSec = 0.5;
+        const gapAfterRumbleSec = 0.8; // 地鳴りが鳴り終わってから「おさまりました」表示までの間
+        const rumbleEachSec = Math.max(1, (state.durationSec - gapAfterRumbleSec - rumbleGapSec) / 2);
+        playRumbleSound(rumbleEachSec, 1.0, 0);
+        playRumbleSound(rumbleEachSec, 0.6, rumbleEachSec + rumbleGapSec);
         if (window.Quake3D) {
           window.Quake3D.startShake(state.durationSec, intensityToLevel(state.intensity), onQuakeSettled);
         } else {
           onQuakeSettled();
         }
-      }, 1700);
+      }, (chimeTotalSec + gapAfterChimeSec) * 1000);
     }, state.waitSec * 1000);
   }
 
