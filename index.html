@@ -583,7 +583,7 @@
       <span class="panel-label">ゆれの長さ（秒）</span>
       <div class="stepper">
         <button data-step="duration" data-delta="-1">−</button>
-        <input type="text" id="input-duration" value="6" inputmode="numeric">
+        <input type="text" id="input-duration" value="12" inputmode="numeric">
         <button data-step="duration" data-delta="1">＋</button>
       </div>
     </div>
@@ -627,7 +627,7 @@
   /* SAVED_STATE_START */
   const state = {
     waitSec: 3,
-    durationSec: 6,
+    durationSec: 12,
     intensity: 3, // 1〜5
     soundOn: true,
     questions: [
@@ -683,16 +683,16 @@
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
-    // 緊急地震速報を模した、2音の繰り返しチャイムを3回×2セット（セットの間に間を空ける）
+    // 緊急地震速報を模した、2音の繰り返しチャイムを3回×2セット（ゆっくりめに、セットの間に2秒の間を空ける）
     const chimeSet = (startTime) => {
       for (let i = 0; i < 3; i++){
-        const t = startTime + i * 0.55;
+        const t = startTime + i * 0.8;
         beep(880, t, 0.18, 0.14);
-        beep(660, t + 0.22, 0.18, 0.14);
+        beep(660, t + 0.3, 0.2, 0.14);
       }
     };
-    const oneSetDuration = 2*0.55 + 0.22 + 0.18; // 3回セットの所要時間
-    const gapBetweenSets = 0.5;
+    const oneSetDuration = 2*0.8 + 0.3 + 0.2; // 3回セットの所要時間
+    const gapBetweenSets = 2.0;
     chimeSet(now);
     chimeSet(now + oneSetDuration + gapBetweenSets);
   }
@@ -828,23 +828,23 @@
     bannerText.innerHTML = 'きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby>';
     if (window.Quake3D) window.Quake3D.reset();
 
-    // 速報チャイム：3回×2セット（セット間に間を空ける）の所要時間
-    const chimeOneSetSec = 2*0.55 + 0.22 + 0.18; // 1.5秒
-    const chimeGapSec = 0.5;
-    const chimeTotalSec = chimeOneSetSec*2 + chimeGapSec; // 3.5秒
-    const gapAfterChimeSec = 0.8; // 速報後、本震までの間
+    // 速報チャイム：3回×2セット（ゆっくりめ、セット間に2秒の間）の所要時間
+    const chimeOneSetSec = 2*0.8 + 0.3 + 0.2; // 2.0秒
+    const chimeGapSec = 2.0;
+    const chimeTotalSec = chimeOneSetSec*2 + chimeGapSec; // 6.0秒
+    const gapAfterChimeSec = 1.2; // 速報後、本震までの間（ゆっくりめに）
 
     // フェーズ0: 教室をそのまま設定秒数だけ見せる（まだ何も起きない）
     setTimeout(() => {
-      // フェーズ1: 速報（3回→間→3回）
+      // フェーズ1: 速報（3回→2秒の間→3回）
       banner.classList.add('show');
       playAlertChime();
 
       setTimeout(() => {
         // フェーズ2: 本震開始。地鳴りを「強め→少し弱め」の2回に分けて鳴らす
         bannerText.innerHTML = '<ruby>地震<rt>じしん</rt></ruby> はっせい　ゆれています。<ruby>机<rt>つくえ</rt></ruby>の<ruby>下<rt>した</rt></ruby>にかくれて<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう';
-        const rumbleGapSec = 0.5;
-        const gapAfterRumbleSec = 0.8; // 地鳴りが鳴り終わってから「おさまりました」表示までの間
+        const rumbleGapSec = 1.0;
+        const gapAfterRumbleSec = 2.0; // 地鳴りが鳴り終わってから「おさまりました」表示までの間（2秒）
         const rumbleEachSec = Math.max(1, (state.durationSec - gapAfterRumbleSec - rumbleGapSec) / 2);
         playRumbleSound(rumbleEachSec, 1.0, 0);
         playRumbleSound(rumbleEachSec, 0.6, rumbleEachSec + rumbleGapSec);
