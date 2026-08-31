@@ -660,6 +660,9 @@
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
     return audioCtx;
   }
   function beep(freq, startTime, dur, gainPeak){
@@ -733,58 +736,58 @@
     osc.stop(now + dur + 0.05);
   }
   function playRumbleSound(durationSec){
-    // 本震開始時の地鳴り音：機械的な音を避け、低域ノイズにゆっくりした音量の波をかけて自然な「ゴー…」感を作る
+    // 本震開始時の地鳴り音：機械的な音を避けつつ、タブレット内蔵スピーカーでも聞こえる帯域に調整
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
     const dur = Math.max(0.6, Math.min(durationSec || 3, 6));
 
-    // ノイズバッファ（かなり強めのローパスで、ザーではなくゴーッという質感にする）
+    // ノイズバッファ（ゴーッという質感のベース。低すぎるとタブレットのスピーカーで聞こえないため帯域を調整）
     const bufferSize = Math.floor(ctx.sampleRate * dur);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     let lastOut = 0;
     for (let i = 0; i < bufferSize; i++){
       const white = Math.random()*2 - 1;
-      lastOut = (lastOut + 0.012*white) / 1.012; // かなり強めのローパス（機械的な倍音を持たせない）
-      data[i] = lastOut * 3.6;
+      lastOut = (lastOut + 0.06*white) / 1.06; // ローパス（強すぎるとタブレットで聞こえなくなるため緩める）
+      data[i] = lastOut * 3.2;
     }
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = buffer;
 
     const noiseFilter = ctx.createBiquadFilter();
     noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 110;
-    noiseFilter.Q.value = 0.5;
+    noiseFilter.frequency.value = 260; // タブレット内蔵スピーカーでも聞こえる帯域に
+    noiseFilter.Q.value = 0.6;
 
     // ゆっくりした音量のうねり（地面が揺れているような不規則感。LFOで自然にゆらす）
     const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(0.32, now + 0.3);
+    noiseGain.gain.setValueAtTime(0.32, now + Math.max(0.4, dur-0.7));
+    noiseGain.gain.linearRampToValueAtTime(0, now + dur);
+
     const swellLFO = ctx.createOscillator();
     swellLFO.type = 'sine';
     swellLFO.frequency.value = 0.9;
     const swellLFOGain = ctx.createGain();
-    swellLFOGain.gain.value = 0.045;
+    swellLFOGain.gain.value = 0.08;
     swellLFO.connect(swellLFOGain);
     swellLFOGain.connect(noiseGain.gain);
-
-    noiseGain.gain.setValueAtTime(0, now);
-    noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.35);
-    noiseGain.gain.setValueAtTime(0.15, now + Math.max(0.4, dur-0.7));
-    noiseGain.gain.linearRampToValueAtTime(0, now + dur);
 
     noiseSrc.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
     noiseSrc.start(now); swellLFO.start(now);
     noiseSrc.stop(now + dur + 0.05); swellLFO.stop(now + dur + 0.05);
 
-    // 地の底から響くような低音（サイン波2本をわずかにずらして、うなり=ビートを生む）
+    // 低めの唸り（サイン波2本のうなり）。タブレットで聞こえるよう周波数を少し上げる
     const rumbleGain = ctx.createGain();
     rumbleGain.gain.setValueAtTime(0, now);
-    rumbleGain.gain.linearRampToValueAtTime(0.075, now + 0.35);
-    rumbleGain.gain.setValueAtTime(0.075, now + Math.max(0.4, dur-0.7));
+    rumbleGain.gain.linearRampToValueAtTime(0.14, now + 0.3);
+    rumbleGain.gain.setValueAtTime(0.14, now + Math.max(0.4, dur-0.7));
     rumbleGain.gain.linearRampToValueAtTime(0, now + dur);
     rumbleGain.connect(ctx.destination);
 
-    [36, 39].forEach(freq => {
+    [78, 82].forEach(freq => {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
       osc.frequency.value = freq;
