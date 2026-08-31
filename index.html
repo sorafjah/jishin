@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>じしんひなんくんれん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDMincho&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-sky: #eef3f6;
+    --ink: #2b2f36;
+    --ink-soft: #5b6270;
+    --paper: #ffffff;
+    --line: #d8dee4;
+    --accent: #3a6ea5;
+    --accent-soft: #dbe8f4;
+    --warn: #b5482a;
+    --warn-soft: #f6e2da;
+    --ok: #2f7a52;
+    --ok-soft: #dcefe2;
+    --wood: #c9a06a;
+    --wood-dark: #a9814f;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden;
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none;
+    font-family: 'BIZ UDPGothic', sans-serif;
+    background: var(--bg-sky);
+    color: var(--ink);
+  }
+  #stage{
+    position: fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    align-items:center; justify-content:center;
+    padding: clamp(16px, 4vw, 48px);
+  }
+  .screen.active{ display:flex; }
+
+  button{
+    font-family: inherit;
+    cursor:pointer;
+    border:none;
+    touch-action: manipulation;
+  }
+  button:focus-visible{ outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- 待機画面 ---------- */
+  #screen-idle{
+    background: linear-gradient(180deg, #f5f8fa 0%, #eef3f6 100%);
+  }
+  .idle-card{
+    text-align:center;
+    max-width: 560px;
+  }
+  .idle-mark{
+    width: clamp(64px, 10vw, 96px);
+    height: clamp(64px, 10vw, 96px);
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(30px, 5vw, 42px);
+  }
+  .idle-title{
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight:700;
+    color: var(--ink);
+    margin: 0 0 10px;
+    line-height:1.5;
+  }
+  .idle-sub{
+    font-size: clamp(14px, 1.8vw, 18px);
+    color: var(--ink-soft);
+    margin: 0 0 32px;
+    line-height:1.8;
+  }
+  .start-btn{
+    min-width: 220px;
+    min-height: 64px;
+    padding: 16px 40px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: clamp(17px, 2.2vw, 22px);
+    font-weight:700;
+    box-shadow: 0 6px 0 #2a5580;
+    transition: transform .08s ease;
+  }
+  .start-btn:active{ transform: translateY(4px); box-shadow: 0 2px 0 #2a5580; }
+
+  /* ---------- 地震発生画面 ---------- */
+  #screen-quake{
+    background: #eef3f6;
+    flex-direction: column;
+    padding-top: clamp(10px, 2vh, 24px);
+  }
+  #shake-root{
+    width:100%;
+    flex: 1;
+    min-height: 0;
+    position:relative;
+    will-change: transform;
+  }
+  .hide-message{
+    position:absolute; left:50%; top:50%;
+    transform: translate(-50%,-50%);
+    z-index: 6;
+    text-align:center;
+    font-size: clamp(24px, 4vw, 40px);
+    font-weight:700;
+    color: var(--ink);
+    background: rgba(255,255,255,.92);
+    padding: 20px 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    line-height:1.6;
+    opacity: 0;
+    pointer-events:none;
+    transition: opacity .3s ease;
+    max-width: 84%;
+  }
+  .hide-message.show{ opacity:1; }
+  .room{
+    position:absolute; inset: 0;
+    display:flex; align-items:flex-end; justify-content:center;
+    padding-bottom: 6vh;
+  }
+  .room-floor{
+    position:absolute; left:0; right:0; bottom:0; height: 14vh;
+    background: #cbb18a;
+    border-top: 4px solid #a9814f;
+  }
+  .room-inner{
+    position:relative;
+    width:min(920px, 92vw);
+    height: 78vh;
+    background: var(--paper);
+    border: 3px solid var(--line);
+    border-radius: 12px;
+    overflow:hidden;
+  }
+  .window{
+    position:absolute; top: 6%; width: 16%; height: 30%;
+    background: #cfe6f2;
+    border: 6px solid #9fb6c2;
+    border-radius: 4px;
+  }
+  .window::before, .window::after{
+    content:""; position:absolute; background:#9fb6c2;
+  }
+  .window::before{ top:0; bottom:0; left:50%; width:6px; margin-left:-3px; }
+  .window::after{ left:0; right:0; top:50%; height:6px; margin-top:-3px; }
+  .w1{ left: 6%; }
+  .w2{ left: 26%; }
+  .w3{ right: 6%; }
+  .w4{ right: 26%; }
+
+  .shelf{
+    position:absolute; bottom: 0; width: 15%; height: 46%;
+    background: var(--wood);
+    border: 3px solid var(--wood-dark);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    transform-origin: bottom center;
+  }
+  .shelf-left{ left: 4%; }
+  .shelf-right{ right: 4%; }
+  .shelf .shelf-line{
+    position:absolute; left:6%; right:6%; height:4px; background: var(--wood-dark);
+  }
+  .shelf .sl1{ top: 30%; }
+  .shelf .sl2{ top: 62%; }
+  .item{
+    position:absolute;
+    border-radius: 3px;
+    transform-origin: bottom center;
+  }
+
+  .desks-wrap{
+    position:absolute;
+    left: 50%; bottom: 4%;
+    transform: translateX(-50%);
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(10px, 2vw, 26px);
+    width: 62%;
+  }
+  .desk{
+    position:relative;
+    width: 100%;
+    padding-top: 62%;
+  }
+  .desk-top{
+    position:absolute; top:0; left:0; right:0; height: 34%;
+    background: #e7c691;
+    border: 3px solid #c9a06a;
+    border-radius: 4px;
+  }
+  .desk-leg{
+    position:absolute; bottom:0; width: 8%; height: 60%;
+    background: #b8b8b8;
+    border: 2px solid #9a9a9a;
+  }
+  .desk-leg.l{ left: 10%; }
+  .desk-leg.r{ right: 10%; }
+  .desk-chair{
+    position:absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 26%; height: 30%;
+    background: #cddbe6;
+    border: 2px solid #a9bccb;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .quake-banner{
+    position: relative;
+    width: min(920px, 92vw);
+    margin: 0 auto clamp(10px, 1.6vh, 16px);
+    padding: clamp(10px, 2vw, 18px) clamp(12px, 3vw, 28px);
+    border-radius: 12px;
+    background: var(--warn);
+    color:#fff;
+    display:flex; align-items:center; gap: 14px;
+    font-weight:700;
+    font-size: clamp(16px, 2.4vw, 24px);
+    z-index: 5;
+    opacity: 0;
+    transform: translateY(-12px);
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  .quake-banner.show{ opacity: 1; transform: translateY(0); }
+  .quake-banner .dot{
+    width: 14px; height:14px; border-radius:50%;
+    background:#fff;
+    animation: blink 0.6s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:.2; } }
+
+  .quake-caption{
+    position:absolute; left:0; right:0; bottom: 3%;
+    text-align:center;
+    font-size: clamp(15px, 2vw, 20px);
+    color: var(--ink-soft);
+    z-index: 5;
+    padding: 0 16px;
+    line-height:1.7;
+  }
+
+  .next-phase-btn{
+    position:absolute; right: clamp(12px,3vw,28px); bottom: clamp(12px,3vw,28px);
+    min-height: 48px; min-width: 120px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 2px solid var(--line);
+    font-size: clamp(13px, 1.6vw, 16px);
+    font-weight:700;
+    z-index: 10;
+    opacity: 0;
+    pointer-events:none;
+    transition: opacity .3s ease, background .12s ease;
+  }
+  .next-phase-btn.show{ opacity: 1; pointer-events:auto; }
+  .next-phase-btn:active{ background: var(--accent-soft); }
+
+  /* ---------- クイズ画面 ---------- */
+  #screen-quiz{
+    background: #f7f5f0;
+  }
+  .quiz-wrap{
+    width: min(760px, 92vw);
+    text-align:center;
+  }
+  .quiz-image-wrap{
+    margin: 0 auto 20px;
+    max-width: min(360px, 70vw);
+    max-height: 28vh;
+    display:flex;
+    justify-content:center;
+  }
+  .quiz-image-wrap img{
+    max-width: 100%;
+    max-height: 28vh;
+    border-radius: 12px;
+    object-fit: contain;
+  }
+  .quiz-q-text{
+    font-size: clamp(22px, 3.4vw, 32px);
+    font-weight:700;
+    line-height:1.6;
+    margin: 0 0 36px;
+    padding: 0 8px;
+  }
+  .quiz-choices{
+    display:flex; gap: clamp(16px, 3vw, 32px);
+    justify-content:center;
+    margin-bottom: 28px;
+  }
+  .choice-btn{
+    width: clamp(120px, 22vw, 200px);
+    height: clamp(120px, 22vw, 200px);
+    border-radius: 24px;
+    font-size: clamp(48px, 8vw, 72px);
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .choice-maru{
+    background: var(--ok-soft);
+    color: var(--ok);
+    box-shadow: 0 6px 0 #1f5c3d;
+  }
+  .choice-batsu{
+    background: var(--warn-soft);
+    color: var(--warn);
+    box-shadow: 0 6px 0 #8a3620;
+  }
+  .choice-btn:active{ transform: translateY(4px); }
+  .choice-maru:active{ box-shadow: 0 2px 0 #1f5c3d; }
+  .choice-batsu:active{ box-shadow: 0 2px 0 #8a3620; }
+  .choice-btn:disabled{ opacity:.5; pointer-events:none; }
+
+  .quiz-feedback{
+    min-height: 96px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap: 8px;
+  }
+  .feedback-label{
+    font-size: clamp(20px, 3vw, 28px);
+    font-weight:700;
+  }
+  .feedback-label.correct{ color: var(--ok); }
+  .feedback-label.wrong{ color: var(--warn); }
+  .feedback-text{
+    font-size: clamp(14px, 1.8vw, 18px);
+    color: var(--ink-soft);
+  }
+  .next-q-btn{
+    margin-top: 18px;
+    min-height: 56px; min-width: 180px;
+    padding: 12px 30px;
+    border-radius: 999px;
+    background: var(--accent);
+    color:#fff;
+    font-size: clamp(15px, 2vw, 19px);
+    font-weight:700;
+    box-shadow: 0 5px 0 #2a5580;
+  }
+  .next-q-btn:active{ transform: translateY(3px); box-shadow: 0 2px 0 #2a5580; }
+
+  /* ---------- 振り返り画面 ---------- */
+  #screen-result{
+    background: linear-gradient(180deg, #f5f8fa 0%, #eef3f6 100%);
+  }
+  .result-wrap{
+    width: min(700px, 92vw);
+    text-align:center;
+  }
+  .result-score{
+    font-size: clamp(16px, 2.2vw, 20px);
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .result-score b{
+    font-size: clamp(30px, 5vw, 44px);
+    color: var(--accent);
+    margin: 0 6px;
+  }
+  .result-title{
+    font-size: clamp(20px, 2.8vw, 26px);
+    font-weight:700;
+    margin: 10px 0 24px;
+  }
+  .result-list{
+    list-style:none; margin:0 0 32px; padding:0;
+    display:flex; flex-direction:column; gap: 10px;
+    text-align:left;
+  }
+  .result-item{
+    display:flex; align-items:center; gap: 14px;
+    padding: 12px 18px;
+    background: var(--paper);
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    font-size: clamp(14px, 1.8vw, 17px);
+  }
+  .result-item .mark{
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size: 18px;
+    color:#fff;
+  }
+  .result-item.ok .mark{ background: var(--ok); }
+  .result-item.ng .mark{ background: var(--warn); }
+  .result-item .body{ flex:1; line-height:1.6; }
+  .result-item .answered{ font-size: 13px; color: var(--ink-soft); margin-top:2px; }
+
+  .result-message{
+    font-size: clamp(14px, 1.9vw, 18px);
+    color: var(--ink-soft);
+    line-height:1.9;
+    margin-bottom: 30px;
+  }
+  .result-btns{
+    display:flex; gap: 16px; justify-content:center; flex-wrap:wrap;
+  }
+  .btn-secondary{
+    min-height: 56px; min-width: 160px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    font-size: clamp(15px, 2vw, 18px);
+    font-weight:700;
+  }
+  .btn-secondary:active{ background: var(--accent-soft); }
+
+  /* ---------- 先生用パネル ---------- */
+  #teacher-fab{
+    position: fixed; right: 14px; bottom: 14px;
+    width: 44px; height: 44px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    display:flex; align-items:center; justify-content:center;
+    z-index: 100;
+    opacity: .55;
+  }
+  #teacher-fab:active{ opacity: .9; }
+  #teacher-panel{
+    position: fixed; inset:0;
+    background: rgba(20,24,30,.5);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index: 200;
+    padding: 16px;
+  }
+  #teacher-panel.open{ display:flex; }
+  .panel-card{
+    width: min(560px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 24px clamp(16px,3vw,28px);
+  }
+  .panel-title{
+    font-size: 19px; font-weight:700; margin: 0 0 4px;
+  }
+  .panel-sub{
+    font-size: 13px; color: var(--ink-soft); margin: 0 0 20px;
+  }
+  .panel-section{ margin-bottom: 22px; }
+  .panel-label{
+    font-size: 14px; font-weight:700; color: var(--ink); margin-bottom: 8px;
+    display:block;
+  }
+  .stepper{
+    display:flex; align-items:center; gap: 10px;
+  }
+  .stepper button{
+    width: 44px; height:44px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 20px; font-weight:700;
+  }
+  .stepper input{
+    width: 70px; height: 44px;
+    text-align:center; font-size:16px;
+    border: 2px solid var(--line); border-radius: 10px;
+    font-family: inherit;
+  }
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .switch{
+    position:relative; width: 52px; height: 30px;
+    border-radius: 999px; background: var(--line);
+    flex: 0 0 auto;
+  }
+  .switch.on{ background: var(--accent); }
+  .switch::after{
+    content:""; position:absolute; top:3px; left:3px;
+    width:24px; height:24px; border-radius:50%;
+    background:#fff;
+    transition: transform .15s ease;
+  }
+  .switch.on::after{ transform: translateX(22px); }
+  .q-edit{
+    display:flex; flex-direction:column; gap:8px;
+    padding: 12px; margin-bottom: 10px;
+    background: #f7f8fa; border-radius: 10px;
+  }
+  .q-edit-row{ display:flex; align-items:center; gap:8px; }
+  .q-edit-row label{ font-size:12px; color: var(--ink-soft); width: 48px; flex:0 0 auto; }
+  .q-edit-row input[type=text]{
+    flex:1; height: 40px; padding: 0 10px;
+    border:2px solid var(--line); border-radius:8px;
+    font-family: inherit; font-size: 14px;
+  }
+  .q-edit-row select{
+    height:40px; border:2px solid var(--line); border-radius:8px;
+    font-family: inherit; font-size:14px; padding: 0 8px;
+  }
+  .q-edit-img-row{
+    display:flex; align-items:center; gap:10px;
+  }
+  .q-edit-img-preview{
+    width: 40px; height:40px; border-radius:6px;
+    object-fit:cover; border:1px solid var(--line);
+    display:none;
+  }
+  .q-edit-img-preview.show{ display:block; }
+  .q-edit-img-btn{
+    height:40px; padding: 0 14px;
+    border-radius:8px; border:2px solid var(--line);
+    background: var(--paper); font-size:13px; color: var(--ink-soft);
+  }
+  .q-edit-img-remove{
+    height:40px; padding: 0 10px;
+    border-radius:8px; border:none;
+    background: transparent; font-size:13px; color: var(--warn);
+    display:none;
+  }
+  .q-edit-img-remove.show{ display:inline-block; }
+  .panel-close{
+    display:block; margin: 6px auto 0;
+    min-height: 48px; min-width: 140px;
+    padding: 10px 26px;
+    border-radius: 999px;
+    background: var(--accent); color:#fff;
+    font-size: 16px; font-weight:700;
+  }
+
+  @media (max-height: 480px){
+    .idle-mark{ display:none; }
+    .idle-sub{ margin-bottom: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+  <!-- 待機画面 -->
+  <section id="screen-idle" class="screen active">
+    <div class="idle-card">
+      <div class="idle-mark">🏫</div>
+      <p class="idle-title">じしんが<ruby>来<rt>き</rt></ruby>たときの<ruby>練習<rt>れんしゅう</rt></ruby>をするよ</p>
+      <p class="idle-sub">がめんをタップすると<br>じしんが<ruby>始<rt>はじ</rt></ruby>まります</p>
+      <button class="start-btn" id="btn-start">はじめる</button>
+    </div>
+  </section>
+
+  <!-- 地震発生画面 -->
+  <section id="screen-quake" class="screen">
+    <div class="quake-banner" id="quake-banner">
+      <span class="dot"></span>
+      <span id="banner-text">きんきゅう<ruby>地震<rt>じしん</rt></ruby><ruby>速報<rt>そくほう</rt></ruby></span>
+    </div>
+    <div id="shake-root">
+      <div class="hide-message" id="hide-message">机の下にかくれて、<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろう</div>
+      <div class="room">
+        <div class="room-inner">
+          <div class="window w1"></div>
+          <div class="window w2"></div>
+          <div class="window w3"></div>
+          <div class="window w4"></div>
+
+          <div class="shelf shelf-left" id="shelf-left">
+            <div class="shelf-line sl1"></div>
+            <div class="shelf-line sl2"></div>
+            <div class="item" id="item-a" style="left:10%; top:6%; width:30%; height:16%; background:#d97757;"></div>
+            <div class="item" id="item-b" style="right:10%; top:38%; width:26%; height:14%; background:#5b8fb0;"></div>
+          </div>
+          <div class="shelf shelf-right" id="shelf-right">
+            <div class="shelf-line sl1"></div>
+            <div class="shelf-line sl2"></div>
+            <div class="item" id="item-c" style="left:12%; top:8%; width:28%; height:16%; background:#5b8fb0;"></div>
+            <div class="item" id="item-d" style="right:12%; top:40%; width:24%; height:12%; background:#d97757;"></div>
+          </div>
+
+          <div class="desks-wrap">
+            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
+            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
+            <div class="desk"><div class="desk-top"></div><div class="desk-leg l"></div><div class="desk-leg r"></div><div class="desk-chair"></div></div>
+          </div>
+        </div>
+        <div class="room-floor"></div>
+      </div>
+      <p class="quake-caption" id="quake-caption">まもなく、つよいゆれが来ます</p>
+      <button class="next-phase-btn" id="btn-to-hide">つぎへ</button>
+    </div>
+  </section>
+
+  <!-- クイズ画面 -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-wrap">
+      <div class="quiz-image-wrap" id="quiz-image-wrap" style="display:none;">
+        <img id="quiz-image" alt="">
+      </div>
+      <p class="quiz-q-text" id="quiz-q-text">机の下にかくれる</p>
+      <div class="quiz-choices">
+        <button class="choice-btn choice-maru" id="btn-maru">○</button>
+        <button class="choice-btn choice-batsu" id="btn-batsu">×</button>
+      </div>
+      <div class="quiz-feedback" id="quiz-feedback"></div>
+    </div>
+  </section>
+
+  <!-- 振り返り画面 -->
+  <section id="screen-result" class="screen">
+    <div class="result-wrap">
+      <p class="result-score"><b id="result-score-num">0</b>／<span id="result-score-total">5</span> もん せいかい</p>
+      <p class="result-title" id="result-title">よくできました</p>
+      <ul class="result-list" id="result-list"></ul>
+      <p class="result-message">じしんが来たら、まず<ruby>机<rt>つくえ</rt></ruby>の下にかくれて、<ruby>頭<rt>あたま</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ろうね。</p>
+      <div class="result-btns">
+        <button class="start-btn" id="btn-restart">もういちど</button>
+        <button class="btn-secondary" id="btn-to-idle">はじめの<ruby>画面<rt>がめん</rt></ruby>へ</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- 先生用パネル -->
+<button id="teacher-fab" aria-label="先生用設定">⚙️</button>
+<div id="teacher-panel">
+  <div class="panel-card">
+    <p class="panel-title">先生用の設定</p>
+    <p class="panel-sub">生徒には見せない設定パネルです</p>
+
+    <div class="panel-section">
+      <span class="panel-label">ゆれの長さ（秒）</span>
+      <div class="stepper">
+        <button data-step="duration" data-delta="-1">−</button>
+        <input type="text" id="input-duration" value="6" inputmode="numeric">
+        <button data-step="duration" data-delta="1">＋</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <span class="panel-label">ゆれの強さ</span>
+      <div class="stepper">
+        <button data-step="intensity" data-delta="-1">−</button>
+        <input type="text" id="input-intensity" value="3" inputmode="numeric">
+        <button data-step="intensity" data-delta="1">＋</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="toggle-row">
+        <span class="panel-label" style="margin:0;">効果音</span>
+        <div class="switch on" id="switch-sound"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <span class="panel-label">○×もんだい（あとで文言を変えられます）</span>
+      <div id="q-edit-list"></div>
+    </div>
+
+    <button class="panel-close" id="btn-panel-close">とじる</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- 状態管理 ---------------- */
+  const state = {
+    durationSec: 6,
+    intensity: 3, // 1〜5
+    soundOn: true,
+    questions: [
+      { text: "机の上に乗る", answer: false, image: null },
+      { text: "机の下にかくれる", answer: true, image: null },
+      { text: "頭を手や物で守る", answer: true, image: null },
+      { text: "すぐに外へ走って逃げる", answer: false, image: null },
+      { text: "棚が倒れないようにおさえる", answer: false, image: null }
+    ],
+    quizIndex: 0,
+    results: [] // { text, answer(bool), chosen(bool), correct(bool) }
+  };
+
+  /* ---------------- 画面切り替え ---------------- */
+  const screens = {
+    idle: document.getElementById('screen-idle'),
+    quake: document.getElementById('screen-quake'),
+    quiz: document.getElementById('screen-quiz'),
+    result: document.getElementById('screen-result')
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  /* ---------------- 音（Web Audio APIで合成） ---------------- */
+  let audioCtx = null;
+  function getCtx(){
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+  function beep(freq, startTime, dur, gainPeak){
+    if (!state.soundOn) return;
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.03);
+    gain.gain.linearRampToValueAtTime(0, startTime + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + dur + 0.05);
+  }
+  function playAlertChime(){
+    if (!state.soundOn) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    // 緊急地震速報を模した、2音の繰り返しチャイム（音源不使用・合成音）
+    for (let i = 0; i < 3; i++){
+      const t = now + i * 0.55;
+      beep(880, t, 0.18, 0.14);
+      beep(660, t + 0.22, 0.18, 0.14);
+    }
+  }
+  function playCorrectSound(){
+    if (!state.soundOn) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    beep(720, now, 0.12, 0.12);
+    beep(960, now + 0.1, 0.16, 0.12);
+  }
+  function playWrongSound(){
+    if (!state.soundOn) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    beep(300, now, 0.22, 0.1);
+  }
+
+  /* ---------------- 揺れアニメーション（requestAnimationFrame + デルタタイム） ---------------- */
+  const shakeRoot = document.getElementById('shake-root');
+  const banner = document.getElementById('quake-banner');
+  const bannerText = document.getElementById('banner-text');
+  const caption = document.getElementById('quake-caption');
+  const btnToHide = document.getElementById('btn-to-hide');
+  const shelfLeft = document.getElementById('shelf-left');
+  const shelfRight = document.getElementById('shelf-right');
+  const items = ['item-a','item-b','item-c','item-d'].map(id => document.getElementById(id));
+
+  let quakeAnim = { running:false, raf:null, lastTs:0, elapsed:0, phase:'idle' };
+
+  function intensityToPx(level){
+    // level 1〜5 → 最大振幅(px)
+    return 6 + level * 5; // 11〜31px
+  }
+
+  function stepQuake(ts){
+    if (!quakeAnim.running) return;
+    if (!quakeAnim.lastTs) quakeAnim.lastTs = ts;
+    const dt = ts - quakeAnim.lastTs;
+    quakeAnim.lastTs = ts;
+    quakeAnim.elapsed += dt;
+
+    const totalMs = state.durationSec * 1000;
+    const progress = Math.min(quakeAnim.elapsed / totalMs, 1);
+
+    let envelope;
+    if (progress < 0.15) {
+      envelope = progress / 0.15;
+    } else if (progress < 0.7) {
+      envelope = 1;
+    } else {
+      envelope = Math.max(0, 1 - (progress - 0.7) / 0.3);
+    }
+
+    const maxPx = intensityToPx(state.intensity);
+    const amp = maxPx * envelope;
+    const t = quakeAnim.elapsed / 1000;
+    const dx = Math.sin(t * 18) * amp + Math.sin(t * 7.3) * amp * 0.3;
+    const dy = Math.cos(t * 21) * amp * 0.4;
+    const rot = Math.sin(t * 13) * envelope * 0.6;
+    shakeRoot.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot.toFixed(2)}deg)`;
+
+    const shelfRot = Math.sin(t * 15) * envelope * 2.2;
+    shelfLeft.style.transform = `rotate(${shelfRot.toFixed(2)}deg)`;
+    shelfRight.style.transform = `rotate(${(-shelfRot).toFixed(2)}deg)`;
+
+    items.forEach((el, i) => {
+      const phase = i * 1.3;
+      const ix = Math.sin(t * 16 + phase) * amp * 0.5;
+      const iy = Math.abs(Math.sin(t * 16 + phase)) * amp * 0.25 * envelope;
+      el.style.transform = `translate(${ix.toFixed(1)}px, ${iy.toFixed(1)}px)`;
+    });
+
+    if (progress >= 1) {
+      quakeAnim.running = false;
+      shakeRoot.style.transform = 'translate(0,0) rotate(0deg)';
+      shelfLeft.style.transform = 'rotate(0deg)';
+      shelfRight.style.transform = 'rotate(0deg)';
+      items.forEach(el => el.style.transform = 'translate(0,0)');
+      onQuakeSettled();
+      return;
+    }
+    quakeAnim.raf = requestAnimationFrame(stepQuake);
+  }
+
+  const hideMessage = document.getElementById('hide-message');
+
+  function startQuakeSequence(){
+    showScreen('quake');
+    banner.classList.remove('show');
+    btnToHide.classList.remove('show');
+    hideMessage.classList.remove('show');
+    caption.textContent = '';
+    bannerText.textContent = 'きんきゅう地震速報';
+
+    // フェーズ0: 教室をそのまま4秒間見せる（まだ何も起きない）
+    setTimeout(() => {
+      // フェーズ1: 速報
+      banner.classList.add('show');
+      caption.textContent = 'まもなく、つよいゆれが来ます';
+      playAlertChime();
+
+      setTimeout(() => {
+        // フェーズ2: 本震開始
+        caption.textContent = 'ゆれています。頭を守ってね';
+        bannerText.textContent = 'じしん はっせい';
+        quakeAnim.running = true;
+        quakeAnim.lastTs = 0;
+        quakeAnim.elapsed = 0;
+        quakeAnim.raf = requestAnimationFrame(stepQuake);
+      }, 1700);
+    }, 4000);
+  }
+
+  function onQuakeSettled(){
+    caption.textContent = '';
+    bannerText.textContent = 'ゆれは おさまりました';
+    setTimeout(() => { banner.classList.remove('show'); }, 1400);
+    hideMessage.classList.add('show');
+    btnToHide.classList.add('show');
+  }
+
+  /* ---------------- クイズ ---------------- */
+  const quizQText = document.getElementById('quiz-q-text');
+  const quizImageWrap = document.getElementById('quiz-image-wrap');
+  const quizImage = document.getElementById('quiz-image');
+  const btnMaru = document.getElementById('btn-maru');
+  const btnBatsu = document.getElementById('btn-batsu');
+  const quizFeedback = document.getElementById('quiz-feedback');
+
+  function startQuiz(){
+    state.quizIndex = 0;
+    state.results = [];
+    showScreen('quiz');
+    showQuestion();
+  }
+
+  function showQuestion(){
+    const q = state.questions[state.quizIndex];
+    quizQText.textContent = q.text;
+    quizFeedback.innerHTML = '';
+    btnMaru.disabled = false;
+    btnBatsu.disabled = false;
+
+    if (q.image) {
+      quizImage.src = q.image;
+      quizImageWrap.style.display = 'flex';
+    } else {
+      quizImage.removeAttribute('src');
+      quizImageWrap.style.display = 'none';
+    }
+  }
+
+  function answerQuiz(chosenTrue){
+    const q = state.questions[state.quizIndex];
+    const correct = (chosenTrue === q.answer);
+    btnMaru.disabled = true;
+    btnBatsu.disabled = true;
+    state.results.push({ text: q.text, answer: q.answer, chosen: chosenTrue, correct: correct });
+
+    if (correct) playCorrectSound(); else playWrongSound();
+
+    const label = document.createElement('p');
+    label.className = 'feedback-label ' + (correct ? 'correct' : 'wrong');
+    label.textContent = correct ? 'せいかい！' : 'おしい！';
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'next-q-btn';
+    const isLast = state.quizIndex === state.questions.length - 1;
+    nextBtn.textContent = isLast ? 'けっかを見る' : 'つぎのもんだいへ';
+    nextBtn.addEventListener('click', () => {
+      if (isLast) {
+        showResult();
+      } else {
+        state.quizIndex += 1;
+        showQuestion();
+      }
+    });
+
+    quizFeedback.innerHTML = '';
+    quizFeedback.appendChild(label);
+    quizFeedback.appendChild(nextBtn);
+  }
+
+  btnMaru.addEventListener('click', () => answerQuiz(true));
+  btnBatsu.addEventListener('click', () => answerQuiz(false));
+
+  /* ---------------- 振り返り画面 ---------------- */
+  function showResult(){
+    const correctCount = state.results.filter(r => r.correct).length;
+    const total = state.results.length;
+    document.getElementById('result-score-num').textContent = correctCount;
+    document.getElementById('result-score-total').textContent = total;
+
+    const titleEl = document.getElementById('result-title');
+    if (correctCount === total) titleEl.textContent = 'ぜんもん せいかい！すごいね';
+    else if (correctCount >= Math.ceil(total * 0.6)) titleEl.textContent = 'よく できました';
+    else titleEl.textContent = 'もういちど かくにんしよう';
+
+    const list = document.getElementById('result-list');
+    list.innerHTML = '';
+    state.results.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'result-item ' + (r.correct ? 'ok' : 'ng');
+      const mark = document.createElement('div');
+      mark.className = 'mark';
+      mark.textContent = r.correct ? '○' : '×';
+      const body = document.createElement('div');
+      body.className = 'body';
+      const p1 = document.createElement('div');
+      p1.textContent = r.text;
+      const p2 = document.createElement('div');
+      p2.className = 'answered';
+      p2.textContent = 'あなたのこたえ：' + (r.chosen ? '○' : '×') + '　／　正しいこたえ：' + (r.answer ? '○' : '×');
+      body.appendChild(p1);
+      body.appendChild(p2);
+      li.appendChild(mark);
+      li.appendChild(body);
+      list.appendChild(li);
+    });
+
+    showScreen('result');
+  }
+
+  /* ---------------- 画面遷移トリガー ---------------- */
+  document.getElementById('btn-start').addEventListener('click', () => {
+    getCtx(); // iOS向け: ユーザー操作直後にAudioContextを起動
+    startQuakeSequence();
+  });
+  document.getElementById('btn-to-hide').addEventListener('click', startQuiz);
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    getCtx();
+    startQuakeSequence();
+  });
+  document.getElementById('btn-to-idle').addEventListener('click', () => {
+    showScreen('idle');
+  });
+
+  /* ---------------- 先生用パネル ---------------- */
+  const teacherFab = document.getElementById('teacher-fab');
+  const teacherPanel = document.getElementById('teacher-panel');
+  const inputDuration = document.getElementById('input-duration');
+  const inputIntensity = document.getElementById('input-intensity');
+  const switchSound = document.getElementById('switch-sound');
+  const qEditList = document.getElementById('q-edit-list');
+
+  teacherFab.addEventListener('click', () => {
+    teacherPanel.classList.add('open');
+    renderQuestionEditors();
+  });
+  document.getElementById('btn-panel-close').addEventListener('click', () => {
+    teacherPanel.classList.remove('open');
+  });
+  teacherPanel.addEventListener('click', (e) => {
+    if (e.target === teacherPanel) teacherPanel.classList.remove('open');
+  });
+
+  document.querySelectorAll('.stepper button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.step;
+      const delta = parseInt(btn.dataset.delta, 10);
+      if (key === 'duration') {
+        state.durationSec = Math.min(15, Math.max(3, state.durationSec + delta));
+        inputDuration.value = state.durationSec;
+      } else if (key === 'intensity') {
+        state.intensity = Math.min(5, Math.max(1, state.intensity + delta));
+        inputIntensity.value = state.intensity;
+      }
+    });
+  });
+  inputDuration.addEventListener('change', () => {
+    let v = parseInt(inputDuration.value, 10);
+    if (isNaN(v)) v = 6;
+    state.durationSec = Math.min(15, Math.max(3, v));
+    inputDuration.value = state.durationSec;
+  });
+  inputIntensity.addEventListener('change', () => {
+    let v = parseInt(inputIntensity.value, 10);
+    if (isNaN(v)) v = 3;
+    state.intensity = Math.min(5, Math.max(1, v));
+    inputIntensity.value = state.intensity;
+  });
+
+  switchSound.addEventListener('click', () => {
+    state.soundOn = !state.soundOn;
+    switchSound.classList.toggle('on', state.soundOn);
+  });
+
+  function renderQuestionEditors(){
+    qEditList.innerHTML = '';
+    state.questions.forEach((q, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'q-edit';
+
+      const row1 = document.createElement('div');
+      row1.className = 'q-edit-row';
+      const label1 = document.createElement('label');
+      label1.textContent = (i+1) + 'もんめ';
+      const input1 = document.createElement('input');
+      input1.type = 'text';
+      input1.value = q.text;
+      input1.addEventListener('input', () => { state.questions[i].text = input1.value; });
+      row1.appendChild(label1);
+      row1.appendChild(input1);
+
+      const row2 = document.createElement('div');
+      row2.className = 'q-edit-row';
+      const label2 = document.createElement('label');
+      label2.textContent = '正解';
+      const select2 = document.createElement('select');
+      const optMaru = document.createElement('option');
+      optMaru.value = 'true'; optMaru.textContent = '○';
+      const optBatsu = document.createElement('option');
+      optBatsu.value = 'false'; optBatsu.textContent = '×';
+      select2.appendChild(optMaru);
+      select2.appendChild(optBatsu);
+      select2.value = q.answer ? 'true' : 'false';
+      select2.addEventListener('change', () => { state.questions[i].answer = (select2.value === 'true'); });
+      row2.appendChild(label2);
+      row2.appendChild(select2);
+
+      const row3 = document.createElement('div');
+      row3.className = 'q-edit-img-row';
+      const preview = document.createElement('img');
+      preview.className = 'q-edit-img-preview';
+      const imgBtn = document.createElement('button');
+      imgBtn.type = 'button';
+      imgBtn.className = 'q-edit-img-btn';
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'q-edit-img-remove';
+      removeBtn.textContent = '画像をけす';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+
+      function refreshImgUI(){
+        if (state.questions[i].image) {
+          preview.src = state.questions[i].image;
+          preview.classList.add('show');
+          removeBtn.classList.add('show');
+          imgBtn.textContent = '画像をかえる';
+        } else {
+          preview.classList.remove('show');
+          removeBtn.classList.remove('show');
+          imgBtn.textContent = '画像をつける';
+        }
+      }
+      refreshImgUI();
+
+      imgBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.questions[i].image = reader.result;
+          refreshImgUI();
+        };
+        reader.readAsDataURL(file);
+      });
+      removeBtn.addEventListener('click', () => {
+        state.questions[i].image = null;
+        fileInput.value = '';
+        refreshImgUI();
+      });
+
+      row3.appendChild(preview);
+      row3.appendChild(imgBtn);
+      row3.appendChild(removeBtn);
+      row3.appendChild(fileInput);
+
+      wrap.appendChild(row1);
+      wrap.appendChild(row2);
+      wrap.appendChild(row3);
+      qEditList.appendChild(wrap);
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
