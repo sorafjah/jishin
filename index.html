@@ -224,8 +224,8 @@
   .choice-btn:active{ transform: translateY(4px); }
   .choice-maru:active{ box-shadow: 0 2px 0 #1f5c3d; }
   .choice-batsu:active{ box-shadow: 0 2px 0 #8a3620; }
-  .choice-btn:disabled{ opacity:1; pointer-events:none; filter: saturate(.45) brightness(1.04); }
-  .choice-btn.selected{ outline: 4px solid var(--ink); outline-offset: 2px; }
+  .choice-btn:disabled{ pointer-events:none; opacity:.4; }
+  .choice-btn:disabled.selected{ opacity:1; }
 
   .quiz-feedback{
     min-height: 0;
@@ -733,59 +733,65 @@
     osc.stop(now + dur + 0.05);
   }
   function playRumbleSound(durationSec){
-    // 本震開始時の「ゴゴゴゴ…」地鳴り音：低音ノイズ＋うなるような低周波振動
+    // 本震開始時の地鳴り音：機械的な音を避け、低域ノイズにゆっくりした音量の波をかけて自然な「ゴー…」感を作る
     if (!state.soundOn) return;
     const ctx = getCtx();
     const now = ctx.currentTime;
     const dur = Math.max(0.6, Math.min(durationSec || 3, 6));
 
-    // ノイズバッファ（ゴゴゴという質感のベース）
+    // ノイズバッファ（かなり強めのローパスで、ザーではなくゴーッという質感にする）
     const bufferSize = Math.floor(ctx.sampleRate * dur);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     let lastOut = 0;
     for (let i = 0; i < bufferSize; i++){
       const white = Math.random()*2 - 1;
-      lastOut = (lastOut + 0.02*white) / 1.02; // ローパスがかったノイズ（ゴーッという質感）
-      data[i] = lastOut * 3.2;
+      lastOut = (lastOut + 0.012*white) / 1.012; // かなり強めのローパス（機械的な倍音を持たせない）
+      data[i] = lastOut * 3.6;
     }
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = buffer;
 
     const noiseFilter = ctx.createBiquadFilter();
     noiseFilter.type = 'lowpass';
-    noiseFilter.frequency.value = 160;
+    noiseFilter.frequency.value = 110;
+    noiseFilter.Q.value = 0.5;
 
+    // ゆっくりした音量のうねり（地面が揺れているような不規則感。LFOで自然にゆらす）
     const noiseGain = ctx.createGain();
+    const swellLFO = ctx.createOscillator();
+    swellLFO.type = 'sine';
+    swellLFO.frequency.value = 0.9;
+    const swellLFOGain = ctx.createGain();
+    swellLFOGain.gain.value = 0.045;
+    swellLFO.connect(swellLFOGain);
+    swellLFOGain.connect(noiseGain.gain);
+
     noiseGain.gain.setValueAtTime(0, now);
-    noiseGain.gain.linearRampToValueAtTime(0.16, now + 0.25);
-    noiseGain.gain.setValueAtTime(0.16, now + Math.max(0.3, dur-0.6));
+    noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.35);
+    noiseGain.gain.setValueAtTime(0.15, now + Math.max(0.4, dur-0.7));
     noiseGain.gain.linearRampToValueAtTime(0, now + dur);
 
     noiseSrc.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
-    noiseSrc.start(now);
-    noiseSrc.stop(now + dur + 0.05);
+    noiseSrc.start(now); swellLFO.start(now);
+    noiseSrc.stop(now + dur + 0.05); swellLFO.stop(now + dur + 0.05);
 
-    // うなるような低音の振動（ゴゴゴという周期的な波）
-    const rumbleOsc = ctx.createOscillator();
-    rumbleOsc.type = 'sawtooth';
-    rumbleOsc.frequency.value = 42;
-    const rumbleLFO = ctx.createOscillator();
-    rumbleLFO.type = 'sine';
-    rumbleLFO.frequency.value = 7; // ゴゴゴという震え
-    const rumbleLFOGain = ctx.createGain();
-    rumbleLFOGain.gain.value = 0.09;
+    // 地の底から響くような低音（サイン波2本をわずかにずらして、うなり=ビートを生む）
     const rumbleGain = ctx.createGain();
     rumbleGain.gain.setValueAtTime(0, now);
-    rumbleGain.gain.linearRampToValueAtTime(0.1, now + 0.25);
-    rumbleGain.gain.setValueAtTime(0.1, now + Math.max(0.3, dur-0.6));
+    rumbleGain.gain.linearRampToValueAtTime(0.075, now + 0.35);
+    rumbleGain.gain.setValueAtTime(0.075, now + Math.max(0.4, dur-0.7));
     rumbleGain.gain.linearRampToValueAtTime(0, now + dur);
+    rumbleGain.connect(ctx.destination);
 
-    rumbleLFO.connect(rumbleLFOGain);
-    rumbleLFOGain.connect(rumbleGain.gain);
-    rumbleOsc.connect(rumbleGain).connect(ctx.destination);
-    rumbleOsc.start(now); rumbleLFO.start(now);
-    rumbleOsc.stop(now + dur + 0.05); rumbleLFO.stop(now + dur + 0.05);
+    [36, 39].forEach(freq => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(rumbleGain);
+      osc.start(now);
+      osc.stop(now + dur + 0.05);
+    });
   }
 
   /* ---------------- 揺れアニメーション（3D教室はQuake3D側でrAF駆動） ---------------- */
