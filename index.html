@@ -126,6 +126,29 @@
     touch-action: none;
   }
 
+  #rec-badge{
+    position: fixed;
+    top: calc(env(safe-area-inset-top,0) + 14px);
+    right: 14px;
+    display:none;
+    align-items:center; gap: 8px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(20,24,30,.72);
+    color:#fff;
+    font-size: 13px; font-weight:700;
+    letter-spacing:.02em;
+    z-index: 90;
+    pointer-events:none;
+  }
+  #rec-badge.show{ display:flex; }
+  #rec-badge .rec-dot{
+    width: 9px; height:9px; border-radius:50%;
+    background: #e0483a;
+    animation: recBlink 1s steps(1) infinite;
+  }
+  @keyframes recBlink{ 50%{ opacity:.25; } }
+
   .quake-banner-row{
     position: relative;
     display:flex; align-items:center; justify-content:center;
@@ -543,6 +566,10 @@
   <section id="screen-quake" class="screen">
     <div id="shake-root">
       <canvas id="quake3d-canvas"></canvas>
+    </div>
+    <div id="rec-badge">
+      <span class="rec-dot"></span>
+      <span>ろくが中</span>
     </div>
     <div class="quake-banner-row" id="quake-banner-row">
       <div class="quake-banner" id="quake-banner">
@@ -1107,11 +1134,15 @@
       btnRecordVideo.disabled = false;
       btnRecordVideo.textContent = 'じしんの動画をろくがして保存';
       if (recordStatusNote) recordStatusNote.textContent = recordDefaultNote;
+      const recBadgeEl = document.getElementById('rec-badge');
+      if (recBadgeEl) recBadgeEl.classList.remove('show');
     };
 
     recordState.recorder = recorder;
     recordState.active = true;
     recorder.start();
+    const recBadgeEl = document.getElementById('rec-badge');
+    if (recBadgeEl) recBadgeEl.classList.add('show');
 
     btnRecordVideo.disabled = true;
     btnRecordVideo.textContent = 'ろくが中…（自動で再生されます）';
