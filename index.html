@@ -489,6 +489,17 @@
     font-size: 12px; color: var(--ink-soft);
     margin: 8px 0 0;
   }
+  .panel-record-btn{
+    display:block; width:100%;
+    min-height: 52px;
+    border-radius: 12px;
+    background: var(--warn);
+    color:#fff;
+    font-size: 16px; font-weight:700;
+  }
+  .panel-record-btn:disabled{
+    opacity: .55;
+  }
   .panel-close{
     display:block; margin: 6px auto 0;
     min-height: 48px; min-width: 140px;
@@ -615,6 +626,11 @@
       <p class="panel-save-note">今の設定を入れた新しいファイルがダウンロードされます</p>
     </div>
 
+    <div class="panel-section panel-save-section">
+      <button class="panel-record-btn" id="btn-record-video">じしんの動画をろくがして保存</button>
+      <p class="panel-save-note" id="record-status-note">地震発生からゆれがおさまるまでを動画（MP4）で保存します。ろくが中は画面が自動で再生されます</p>
+    </div>
+
     <button class="panel-close" id="btn-panel-close">とじる</button>
   </div>
 </div>
@@ -656,12 +672,18 @@
 
   /* ---------------- 音（Web Audio APIで合成） ---------------- */
   let audioCtx = null;
+  let masterOut = null; // すべての合成音の出力先（スピーカーへ常時接続。録画時はここに録音先も並列接続する）
   function getCtx(){
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
+    }
+    if (!masterOut) {
+      masterOut = audioCtx.createGain();
+      masterOut.gain.value = 1;
+      masterOut.connect(audioCtx.destination);
     }
     return audioCtx;
   }
@@ -675,7 +697,7 @@
     gain.gain.setValueAtTime(0, startTime);
     gain.gain.linearRampToValueAtTime(gainPeak, startTime + 0.03);
     gain.gain.linearRampToValueAtTime(0, startTime + dur);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(masterOut);
     osc.start(startTime);
     osc.stop(startTime + dur + 0.05);
   }
@@ -709,7 +731,7 @@
       gain.gain.setValueAtTime(0, startTime);
       gain.gain.linearRampToValueAtTime(peak, startTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
-      osc.connect(gain).connect(ctx.destination);
+      osc.connect(gain).connect(masterOut);
       osc.start(startTime);
       osc.stop(startTime + dur + 0.05);
     };
@@ -737,7 +759,7 @@
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(0.13, now + 0.05);
     gain.gain.linearRampToValueAtTime(0, now + dur);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(masterOut);
     osc.start(now);
     osc.stop(now + dur + 0.05);
   }
@@ -785,7 +807,7 @@
     swellLFO.connect(swellLFOGain);
     swellLFOGain.connect(noiseGain.gain);
 
-    noiseSrc.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noiseSrc.connect(noiseFilter).connect(noiseGain).connect(masterOut);
     noiseSrc.start(now); swellLFO.start(now);
     noiseSrc.stop(now + dur + 0.05); swellLFO.stop(now + dur + 0.05);
 
@@ -796,7 +818,7 @@
     rumbleGain.gain.linearRampToValueAtTime(rumblePeak, now + 0.3);
     rumbleGain.gain.setValueAtTime(rumblePeak, now + Math.max(0.4, dur-0.7));
     rumbleGain.gain.linearRampToValueAtTime(0, now + dur);
-    rumbleGain.connect(ctx.destination);
+    rumbleGain.connect(masterOut);
 
     [78, 82].forEach(freq => {
       const osc = ctx.createOscillator();
@@ -861,6 +883,9 @@
     bannerText.innerHTML = 'ゆれは おさまりました';
     btnToHide.classList.add('show');
     if (window.Quake3D) window.Quake3D.crouch(true);
+    if (typeof stopVideoRecordingIfActive === 'function' && recordState && recordState.active){
+      setTimeout(stopVideoRecordingIfActive, 500);
+    }
   }
 
   /* ---------------- クイズ ---------------- */
@@ -1004,7 +1029,103 @@
     if (e.target === teacherPanel) teacherPanel.classList.remove('open');
   });
 
-  /* ---------------- HTML保存（この設定を埋め込んだファイルをDL） ---------------- */
+  /* ---------------- 動画録画（地震発生〜ゆれがおさまるまでをMP4で保存） ---------------- */
+  const recordState = { active:false, recorder:null, chunks:[], mimeType:'', destNode:null };
+  const btnRecordVideo = document.getElementById('btn-record-video');
+  const recordStatusNote = document.getElementById('record-status-note');
+  const recordDefaultNote = recordStatusNote ? recordStatusNote.textContent : '';
+
+  function pickRecorderMimeType(){
+    const candidates = [
+      'video/mp4;codecs=avc1,mp4a.40.2',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm'
+    ];
+    for (const t of candidates){
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return '';
+  }
+
+  function startVideoRecording(){
+    if (!window.MediaRecorder){
+      alert('このブラウザは動画のろくがに対応していません。');
+      return;
+    }
+    const canvasEl = document.getElementById('quake3d-canvas');
+    if (!canvasEl){
+      alert('ろくがの準備ができませんでした。もう一度お試しください。');
+      return;
+    }
+    const ctx = getCtx(); // 直前のユーザー操作（ボタン押下）に紐づけてAudioContextを起動
+
+    // 音声：masterOutの音を録音用ストリームにも分岐して流す
+    const dest = ctx.createMediaStreamDestination();
+    masterOut.connect(dest);
+    recordState.destNode = dest;
+
+    const videoStream = canvasEl.captureStream(30);
+    const combined = new MediaStream([
+      ...videoStream.getVideoTracks(),
+      ...dest.stream.getAudioTracks()
+    ]);
+
+    const mimeType = pickRecorderMimeType();
+    recordState.mimeType = mimeType;
+    recordState.chunks = [];
+    let recorder;
+    try {
+      recorder = mimeType ? new MediaRecorder(combined, { mimeType }) : new MediaRecorder(combined);
+    } catch (err){
+      alert('ろくがを開始できませんでした。ブラウザが対応していない可能性があります。');
+      return;
+    }
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordState.chunks.push(e.data); };
+    recorder.onstop = () => {
+      try { masterOut.disconnect(dest); } catch(e){}
+      const blob = new Blob(recordState.chunks, { type: mimeType || 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const ext = (mimeType && mimeType.indexOf('mp4') !== -1) ? 'mp4' : 'webm';
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'jishin-douga.' + ext;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+      recordState.active = false;
+      btnRecordVideo.disabled = false;
+      btnRecordVideo.textContent = 'じしんの動画をろくがして保存';
+      if (recordStatusNote) recordStatusNote.textContent = recordDefaultNote;
+    };
+
+    recordState.recorder = recorder;
+    recordState.active = true;
+    recorder.start();
+
+    btnRecordVideo.disabled = true;
+    btnRecordVideo.textContent = 'ろくが中…（自動で再生されます）';
+    if (recordStatusNote) recordStatusNote.textContent = 'ろくがが終わると自動でほぞんされます。画面を閉じずにお待ちください。';
+
+    // パネルを閉じて待機画面に戻し、地震シーケンスを自動再生する
+    teacherPanel.classList.remove('open');
+    showScreen('idle');
+    setTimeout(() => {
+      startQuakeSequence();
+    }, 300);
+  }
+
+  function stopVideoRecordingIfActive(){
+    if (recordState.active && recordState.recorder && recordState.recorder.state !== 'inactive'){
+      recordState.recorder.stop();
+    }
+  }
+
+  btnRecordVideo.addEventListener('click', startVideoRecording);
+
+
   document.getElementById('btn-save-html').addEventListener('click', () => {
     try {
       const savedState = {
